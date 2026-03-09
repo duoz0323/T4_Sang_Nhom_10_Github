@@ -1,20 +1,6 @@
 spring:
   application:
     name: Backend_Nhom10
-
-  datasource:
-    url: jdbc:mysql://localhost:3306/quanlytuyendung_nhom10
-    username: root
-    password: ""
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-
 server:
   port: 8080
   servlet:
