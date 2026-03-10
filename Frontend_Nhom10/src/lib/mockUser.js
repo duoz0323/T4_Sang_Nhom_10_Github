@@ -1,4 +1,4 @@
-const userss = [
+const users = [
   { userId: 1, email: "admin1@gmail.com", roles: "ADMIN" },
   { userId: 2, email: "admin2@gmail.com", roles: "ADMIN" },
   { userId: 3, email: "admin3@gmail.com", roles: "ADMIN" },
@@ -26,4 +26,4 @@ const userss = [
   { userId: 25, email: "user22@gmail.com", roles: "USER" },
   { userId: 26, email: "user23@gmail.com", roles: "USER" },
 ];
-export default userss;
+export default users;

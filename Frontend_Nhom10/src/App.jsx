@@ -16,6 +16,7 @@ function App() {
       />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<UsersManagementPage />} />
           <Route path="/users" element={<UsersManagementPage />} />
         </Routes>
       </BrowserRouter>
