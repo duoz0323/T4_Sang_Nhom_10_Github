@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Search, Plus } from "lucide-react";
 import api from "../../lib/axios";
-import UserTable from "../../components/users/UserTable";
+import UserTable from "../../components/Management_user/UserTable";
 import Dialog from "../../components/ui/Dialog";
-import DialogForm from "../../components/users/DialogForm";
+import DialogForm from "../../components/Management_user/DialogForm";
 import { Toaster, toast } from "sonner";
 
 export default function UsersManagementPage() {

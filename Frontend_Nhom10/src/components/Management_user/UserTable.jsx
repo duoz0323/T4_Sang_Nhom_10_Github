@@ -1,4 +1,5 @@
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2,ChevronDown } from "lucide-react";
+import Pagination from "./Pagination";
 
 export default function UserTable({ users, onEdit, onDelete }) {
   return (
@@ -30,9 +31,7 @@ export default function UserTable({ users, onEdit, onDelete }) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3.5">
                     <div>
-                      <div className="text-sm text-gray-900">
-                        {user.userId}
-                      </div>
+                      <div className="text-sm text-gray-900">{user.userId}</div>
                     </div>
                   </div>
                 </td>
@@ -77,7 +76,7 @@ export default function UserTable({ users, onEdit, onDelete }) {
             ))}
         </tbody>
       </table>
+      <Pagination users={users}/>
     </div>
   );
 }
-
