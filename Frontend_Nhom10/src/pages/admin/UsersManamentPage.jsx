@@ -5,13 +5,13 @@ import UserTable from "../../components/Management_user/UserTable";
 import Dialog from "../../components/ui/Dialog";
 import DialogForm from "../../components/Management_user/DialogForm";
 import { Toaster, toast } from "sonner";
+import Pagination from "./../../components/Management_user/Pagination";
 
 export default function UsersManagementPage() {
   const [users, setUsers] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [selectedUser, setSelectedUser] = useState(null);
-
   const fetchUsers = async () => {
     try {
       const response = await api.get("/users");
@@ -120,6 +120,9 @@ export default function UsersManagementPage() {
           onSuccess={handleFormSuccess}
         />
       </Dialog>
+      <Pagination
+        users={users}
+      />
     </>
   );
 }

@@ -1,9 +1,7 @@
 import { Edit2, Trash2,ChevronDown } from "lucide-react";
-import Pagination from "./Pagination";
-
 export default function UserTable({ users, onEdit, onDelete }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-scroll">
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-200">
@@ -76,7 +74,6 @@ export default function UserTable({ users, onEdit, onDelete }) {
             ))}
         </tbody>
       </table>
-      <Pagination users={users}/>
     </div>
   );
 }
