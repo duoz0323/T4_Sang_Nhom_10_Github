@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, Lock, Shield, Save, X } from "lucide-react";
 import api from "../../lib/axios";
 import { toast } from "sonner";
@@ -9,7 +9,15 @@ export default function UserForm({ type, user, onClose, onSuccess }) {
     password: "",
     roles: "USER",
   });
-
+  useEffect(() => {
+  if (type === "update" && user) {
+    setFormData({
+      email: user.email,
+      password: "",
+      roles: user.roles[0] || "USER",
+    });
+  }
+  }, [type, user]);
   const handleCreateUser = async (data) => {
     const res = await api.post("/users", data);
     if (res.status === 200) {
