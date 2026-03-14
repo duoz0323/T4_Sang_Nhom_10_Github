@@ -1,4 +1,4 @@
-import { Edit2, Trash2,ChevronDown } from "lucide-react";
+import { Edit2, Trash2, ChevronDown } from "lucide-react";
 export default function UserTable({ users, onEdit, onDelete }) {
   return (
     <div className="overflow-x-scroll">
@@ -7,6 +7,9 @@ export default function UserTable({ users, onEdit, onDelete }) {
           <tr className="border-b border-gray-200">
             <th className="px-6 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider bg-gray-50">
               Id
+            </th>
+            <th className="px-6 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider bg-gray-50">
+              Name
             </th>
             <th className="px-6 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider bg-gray-50">
               Email
@@ -32,6 +35,11 @@ export default function UserTable({ users, onEdit, onDelete }) {
                       <div className="text-sm text-gray-900">{user.userId}</div>
                     </div>
                   </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <a className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                    {user.name}
+                  </a>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <a className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
