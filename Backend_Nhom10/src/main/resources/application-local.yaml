@@ -9,3 +9,15 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+  # 3. Cấu hình Keycloak (Xác minh Token)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://lemur-14.cloud-iam.com/auth/realms/webtuyendung-nhom10
+idp:
+  url: https://lemur-14.cloud-iam.com/auth
+  client-id: webtuyendung_id
+  client-secret: QiLoWw2to5vHqdlrqUUPOeKr0CyPkB6L
+  realm: webtuyendung-nhom10
