@@ -9,3 +9,14 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+  # 3. Cấu hình Keycloak (Xác minh Token)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8180}/realms/WebTuyenDung
+idp:
+  url: ${KEYCLOAK_URL:http://localhost:8180}
+  client-id: webtuyendung_id
+  client-secret: P36Z4mKCskPez0VD1vud4IXu6HUdasTa
