@@ -15,8 +15,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8180}/realms/WebTuyenDung
+          issuer-uri: https://lemur-14.cloud-iam.com/auth/realms/webtuyendung-nhom10
 idp:
-  url: ${KEYCLOAK_URL:http://localhost:8180}
+  url: https://lemur-14.cloud-iam.com/auth
   client-id: webtuyendung_id
-  client-secret: P36Z4mKCskPez0VD1vud4IXu6HUdasTa
+  client-secret: QiLoWw2to5vHqdlrqUUPOeKr0CyPkB6L
+  realm: webtuyendung-nhom10
