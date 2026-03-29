@@ -22,10 +22,7 @@ import stu.edu.Backend_Nhom10.repository.*;
 import stu.edu.Backend_Nhom10.security.SecurityUtils;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,7 +39,7 @@ public class JobPostingService {
     SkillRepository skillRepository;
     SecurityUtils securityUtils;
     public JobPostingResponse createPost(JobCreateRequest request){
-        String userId = securityUtils.getCurrentCompanyId();
+        String userId = securityUtils.getObject();
         CompanyProfile company = companyProfileRepository
                 .findByUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
@@ -63,7 +60,7 @@ public class JobPostingService {
                 () ->new AppException(ErrorCode.POST_NOT_EXISTED)
         );
         if (post.getStatus() == Status.CLOSED || post.getStatus() == Status.EXPIRED) {
-            throw new AppException(ErrorCode.NOT_UPDATE_POST);
+            throw new AppException(ErrorCode.INVALID_ADJUST_POST);
         }
         jobPostingMapper.updatePost(post,updateRequest);
         if (updateRequest.getLocations() != null) {
@@ -73,9 +70,14 @@ public class JobPostingService {
 
         // ===== update industries + skills =====
         if (updateRequest.getIndustries() != null) {
-            post.getIndustries().clear(); // orphanRemoval sẽ auto xóa
+            post.getIndustries().clear();
+
             Set<JobIndustry> jobIndustries = buildJobIndustries(updateRequest, post);
-            post.setIndustries(jobIndustries);
+
+            for (JobIndustry ji : jobIndustries) {
+                ji.setJobPosting(post);
+                post.getIndustries().add(ji);
+            }
         }
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
@@ -139,34 +141,37 @@ public class JobPostingService {
     }
 
     public JobPostingResponse closePost(String id) {
-        String companyId = securityUtils.getCurrentCompanyId();
+        String companyId = securityUtils.getObject();
+        Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
         JobPosting post = jobPostingRepository.findById(id)
                         .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-        if (!post.getCompanyProfile().getCompanyProfileId().equals(companyId)) {
+        if (!post.getCompanyProfile().getCompanyProfileId().equals(company.get().getCompanyProfileId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         post.setStatus(Status.CLOSED);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
     public JobPostingResponse reopen(String id) {
-        String companyId = securityUtils.getCurrentCompanyId();
+        String companyId = securityUtils.getObject();
+        Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
         JobPosting post = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        if (!post.getCompanyProfile().getCompanyProfileId().equals(companyId)) {
+        if (!post.getCompanyProfile().getCompanyProfileId().equals(company.get().getCompanyProfileId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         if (post.getStatus() != Status.CLOSED && post.getStatus() != Status.EXPIRED) {
-            throw new AppException(ErrorCode.NOT_UPDATE_POST);
+            throw new AppException(ErrorCode.INVALID_ADJUST_POST);
         }
 
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
 
-    public List<JobPostingResponse> getMyJobs(){
-        String companyId = securityUtils.getCurrentCompanyId();
-        return jobPostingRepository.findByCompanyProfile_CompanyProfileId(companyId)
+    public List<JobPostingResponse> getMyPosts(){
+        String companyId = securityUtils.getObject();
+        Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
+        return jobPostingRepository.findByCompanyProfile_CompanyProfileId(company.get().getCompanyProfileId())
                 .stream()
                 .map(jobPostingMapper::toJobPostingResponse)
                 .toList();
@@ -179,7 +184,7 @@ public class JobPostingService {
                 .map(jobPostingMapper::toJobPostingResponse)
                 .toList();
     }
-    public JobPostingResponse getPublicJob(String id) {
+    public JobPostingResponse getPublicPost(String id) {
         JobPosting post = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
@@ -195,25 +200,24 @@ public class JobPostingService {
         return jobPostingMapper.toJobPostingResponse(post);
     }
     //=================ADMIN===================
-    public List<JobPostingResponse> getPendingJobs() {
+    public List<JobPostingResponse> getPendingPosts() {
 
         return jobPostingRepository.findAllByStatus(Status.PENDING)
                 .stream()
                 .map(jobPostingMapper::toJobPostingResponse)
                 .toList();
     }
-    public JobPostingResponse approve(String id) {
+    public JobPostingResponse updateStatus(String id, Status status) {
         JobPosting post = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        post.setStatus(Status.ACTIVE);
-        return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
-    }
-    public JobPostingResponse reject(String id) {
-        JobPosting post = jobPostingRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        // Optional: validate logic chuyển trạng thái
+        if (post.getStatus() == Status.CLOSED || post.getStatus() == Status.EXPIRED) {
+            throw new AppException(ErrorCode.INVALID_ADJUST_POST);
+        }
 
-        post.setStatus(Status.REJECTED);
+        post.setStatus(status);
+
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
     //==================SYSTEM=================

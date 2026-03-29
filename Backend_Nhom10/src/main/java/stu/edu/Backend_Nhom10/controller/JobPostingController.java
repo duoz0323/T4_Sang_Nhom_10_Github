@@ -10,6 +10,7 @@ import stu.edu.Backend_Nhom10.dto.ApiResponse;
 import stu.edu.Backend_Nhom10.dto.request.JobCreateRequest;
 import stu.edu.Backend_Nhom10.dto.request.JobUpdateRequest;
 import stu.edu.Backend_Nhom10.dto.response.JobPostingResponse;
+import stu.edu.Backend_Nhom10.enums.Status;
 import stu.edu.Backend_Nhom10.service.JobPostingService;
 
 import java.util.List;
@@ -51,9 +52,9 @@ public class JobPostingController {
                 .build();
     }
     @GetMapping("/my-jobs")
-    public ApiResponse<List<JobPostingResponse>> getMyJobs() {
+    public ApiResponse<List<JobPostingResponse>> getMyPosts() {
         return ApiResponse.<List<JobPostingResponse>>builder()
-                .result(jobPostingService.getMyJobs())
+                .result(jobPostingService.getMyPosts())
                 .build();
     }
     @GetMapping("/public")
@@ -63,27 +64,24 @@ public class JobPostingController {
                 .build();
     }
     @GetMapping("/{id}")
-    public ApiResponse<JobPostingResponse> getPublicJob(@PathVariable String id) {
+    public ApiResponse<JobPostingResponse> getPublicPost(@PathVariable String id) {
         return ApiResponse.<JobPostingResponse>builder()
-                .result(jobPostingService.getPublicJob(id))
+                .result(jobPostingService.getPublicPost(id))
                 .build();
     }
     @GetMapping("/admin/pending")
-    public ApiResponse<List<JobPostingResponse>> getPendingJobs() {
+    public ApiResponse<List<JobPostingResponse>> getPendingPosts() {
         return ApiResponse.<List<JobPostingResponse>>builder()
-                .result(jobPostingService.getPendingJobs())
+                .result(jobPostingService.getPendingPosts())
                 .build();
     }
-    @PutMapping("/admin/{id}/approve")
-    public ApiResponse<JobPostingResponse> approve(@PathVariable String id) {
+    @PatchMapping("/admin/{id}/status")
+    public ApiResponse<JobPostingResponse> updateStatus(
+            @PathVariable String id,
+            @RequestParam Status status
+    ) {
         return ApiResponse.<JobPostingResponse>builder()
-                .result(jobPostingService.approve(id))
-                .build();
-    }
-    @PutMapping("/admin/{id}/reject")
-    public ApiResponse<JobPostingResponse> reject(@PathVariable String id) {
-        return ApiResponse.<JobPostingResponse>builder()
-                .result(jobPostingService.reject(id))
+                .result(jobPostingService.updateStatus(id, status))
                 .build();
     }
 }

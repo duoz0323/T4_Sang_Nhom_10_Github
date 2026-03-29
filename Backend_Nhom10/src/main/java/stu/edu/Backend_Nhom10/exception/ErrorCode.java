@@ -40,7 +40,7 @@ public enum ErrorCode {
 
     //JOBPOSTING
     POST_NOT_EXISTED(1025,"Post is not existed",HttpStatus.BAD_REQUEST),
-    NOT_UPDATE_POST(1026,"Can not update this post",HttpStatus.BAD_REQUEST),
+    INVALID_ADJUST_POST(1026,"Can not adjust this post",HttpStatus.BAD_REQUEST),
     POST_NOT_FOUND(1026,"post not found",HttpStatus.BAD_REQUEST),
     POST_NOT_ACTIVE(1027,"Job not available",HttpStatus.BAD_REQUEST),
     POST_EXPIRED(1028,"Job is expired",HttpStatus.BAD_REQUEST),

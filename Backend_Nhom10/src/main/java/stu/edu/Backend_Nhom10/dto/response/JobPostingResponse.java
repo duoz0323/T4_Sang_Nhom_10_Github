@@ -20,7 +20,7 @@ public class JobPostingResponse {
     String title;
     String description;
     BigDecimal salaryRequire;
-    List<Location> locations;
+    List<LocationResponse> locations;
     List<IndustryJobPostingResponse> industries;
     LocalDate deadline;
     String status;

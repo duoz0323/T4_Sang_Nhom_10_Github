@@ -7,10 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import stu.edu.Backend_Nhom10.dto.request.SkillRequest;
 import stu.edu.Backend_Nhom10.dto.response.SkillResponse;
+import stu.edu.Backend_Nhom10.entity.Industry;
 import stu.edu.Backend_Nhom10.entity.Skill;
 import stu.edu.Backend_Nhom10.exception.AppException;
 import stu.edu.Backend_Nhom10.exception.ErrorCode;
 import stu.edu.Backend_Nhom10.mapper.SkillMapper;
+import stu.edu.Backend_Nhom10.repository.IndustryRepository;
 import stu.edu.Backend_Nhom10.repository.SkillRepository;
 
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.List;
 public class SkillService {
     SkillRepository skillRepository;
     SkillMapper skillMapper;
+    IndustryRepository industryRepository;
 
     public SkillResponse createSkill(SkillRequest request){
         String skillName = request.getSkillName().trim();
@@ -30,7 +33,10 @@ public class SkillService {
         if (existing.isPresent()) {
             throw new AppException(ErrorCode.SKILL_EXISTED);
         }
+        Industry industry = industryRepository.findById(request.getIndustryId())
+                .orElseThrow(() -> new AppException(ErrorCode.INDUSTRY_NOT_FOUND));
         Skill skill = skillMapper.toSkillEntity(request);
+        skill.setIndustry(industry);
         return skillMapper.toSkillResponse(skillRepository.save(skill));
     }
     public SkillResponse updateSkill(Long id,SkillRequest update){

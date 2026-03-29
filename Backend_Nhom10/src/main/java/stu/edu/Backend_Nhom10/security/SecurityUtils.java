@@ -25,6 +25,9 @@ public class SecurityUtils {
     public String getCurrentCompanyId() {
         return getClaim("companyProfileId");
     }
+    public String getObject(){
+        return getJwt().getSubject();
+    }
 
     public String getUsername() {
         return getClaim("preferred_username");

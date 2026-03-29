@@ -9,5 +9,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LocationResponse {
+    Long id;
     String city;
 }
