@@ -32,7 +32,7 @@ public class SecurityConfig {
                         "/swagger-ui.html"
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET,"/").permitAll()
+                .requestMatchers("/").permitAll()
                 .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(
