@@ -20,12 +20,17 @@ public class SecurityConfig {
             "/company_profile/register",
             "/company_profile/login",
             "/candidate_profile/register",
-            "/candidate_profile/login"
+            "/candidate_profile/login",
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui.html"
+                ).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.GET,"/").permitAll()
                 .anyRequest().authenticated());
