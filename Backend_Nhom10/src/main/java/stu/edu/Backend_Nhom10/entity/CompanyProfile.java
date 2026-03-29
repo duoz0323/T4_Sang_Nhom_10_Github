@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -38,5 +39,9 @@ public class CompanyProfile implements Serializable {
     LocalDateTime createAt;
     @UpdateTimestamp
     LocalDateTime updateAt;
+
+    //Quan hệ 1-N với JobPosting
+    @OneToMany(mappedBy = "companyProfile",fetch = FetchType.LAZY)
+    List<JobPosting> jobpostings;
 
 }

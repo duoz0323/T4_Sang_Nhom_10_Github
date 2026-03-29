@@ -2,7 +2,7 @@ package stu.edu.Backend_Nhom10.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import stu.edu.Backend_Nhom10.NotificationType;
+import stu.edu.Backend_Nhom10.enums.NotificationType;
 
 import java.time.LocalDateTime;
 

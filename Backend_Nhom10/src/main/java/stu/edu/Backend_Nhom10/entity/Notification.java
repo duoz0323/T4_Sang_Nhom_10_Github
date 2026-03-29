@@ -3,7 +3,8 @@ package stu.edu.Backend_Nhom10.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import stu.edu.Backend_Nhom10.NotificationType;
+import stu.edu.Backend_Nhom10.enums.NotificationType;
+import stu.edu.Backend_Nhom10.enums.ReceiverType;
 
 import java.time.LocalDateTime;
 
@@ -32,9 +33,12 @@ public class Notification {
 
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    User user;
+
+    String receiverId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    ReceiverType receiverType;
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

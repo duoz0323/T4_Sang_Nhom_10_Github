@@ -1,4 +1,4 @@
-package stu.edu.Backend_Nhom10;
+package stu.edu.Backend_Nhom10.enums;
 
 public enum NotificationType {
     APPLY_SUCCESS,

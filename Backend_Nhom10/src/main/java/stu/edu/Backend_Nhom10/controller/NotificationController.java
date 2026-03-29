@@ -1,16 +1,14 @@
 package stu.edu.Backend_Nhom10.controller;
-
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import stu.edu.Backend_Nhom10.dto.ApiResponse;
-import stu.edu.Backend_Nhom10.dto.request.NotificationCreateRequest;
+import stu.edu.Backend_Nhom10.configuration.CurrentUser;
 import stu.edu.Backend_Nhom10.dto.response.NotificationResponse;
 import stu.edu.Backend_Nhom10.service.NotificationService;
-
+import stu.edu.Backend_Nhom10.service.UserContextService;
 import java.util.List;
 
 @RestController
@@ -20,39 +18,40 @@ import java.util.List;
 @Slf4j
 public class NotificationController {
     NotificationService noticeService;
-    @PostMapping
-    ApiResponse<NotificationResponse> create(@RequestBody @Valid NotificationCreateRequest request) {
+    UserContextService userContextService;
 
-        return ApiResponse.<NotificationResponse>builder()
-                .result(noticeService.create(request))
-                .build();
-    }
-
-    private Long getUserId() {
-        return 1L;
-    }
     @GetMapping
-    public List<NotificationResponse> getNotifications(@RequestParam(required = false) Long lastId) {
-        return noticeService.getNotifications(getUserId (), lastId);
+    List<NotificationResponse> getNotifications(@RequestParam(required = false) Long lastId) {
+        CurrentUser currentUser = userContextService.getCurrentUser();
+        return noticeService.getNotifications(
+                currentUser.getId(),
+                currentUser.getType(),
+                lastId
+        );
+
     }
 
     @GetMapping("/unread-count")
-    public long countUnread() {
-        return noticeService.countUnread(getUserId());
+    long countUnread() {
+        CurrentUser currentUser = userContextService.getCurrentUser();
+        return noticeService.countUnread(currentUser.getId(),currentUser.getType());
     }
-
+//
     @PatchMapping("/{id}/read")
-    public void markAsRead(@PathVariable Long id) {
-        noticeService.markAsRead(id, getUserId());
+    void markAsRead(@PathVariable Long id) {
+        CurrentUser currentUser = userContextService.getCurrentUser();
+        noticeService.markAsRead(id,currentUser.getId(),currentUser.getType());
     }
-
+//
     @PatchMapping("/{id}/unread")
-    public void markAsUnread(@PathVariable Long id) {
-        noticeService.markAsUnread(id, getUserId());
+    void markAsUnread(@PathVariable Long id) {
+        CurrentUser currentUser = userContextService.getCurrentUser();
+        noticeService.markAsUnread(id,currentUser.getId(),currentUser.getType());
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        noticeService.delete(id, getUserId());
+    void delete(@PathVariable Long id) {
+        CurrentUser currentUser = userContextService.getCurrentUser();
+        noticeService.delete(id,currentUser.getId(),currentUser.getType());
     }
 }

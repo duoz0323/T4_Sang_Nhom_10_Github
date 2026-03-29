@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import stu.edu.Backend_Nhom10.dto.request.NotificationCreateRequest;
 import stu.edu.Backend_Nhom10.dto.response.NotificationResponse;
 import stu.edu.Backend_Nhom10.entity.Notification;
+import stu.edu.Backend_Nhom10.enums.ReceiverType;
+import stu.edu.Backend_Nhom10.exception.AppException;
+import stu.edu.Backend_Nhom10.exception.ErrorCode;
 import stu.edu.Backend_Nhom10.mapper.NotificationMapper;
 import stu.edu.Backend_Nhom10.repository.NotificationRepository;
-import stu.edu.Backend_Nhom10.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,21 +25,14 @@ import java.util.List;
 public class NotificationService {
     NotificationMapper noticeMapper;
     NotificationRepository noticeRepository;
-    public NotificationResponse create(NotificationCreateRequest request) {
-        Notification entity = noticeMapper.toNotificationEntity(request);
-        entity.setIsRead(false);
-        entity.setCreatedAt(LocalDateTime.now());
-
-        return noticeMapper.toNotificationResponse(noticeRepository.save(entity));
-    }
-
-    public List<NotificationResponse> getNotifications(Long userId, Long lastId) {
+    public List<NotificationResponse> getNotifications(String receiverId, ReceiverType type,Long lastId) {
         List<Notification> list;
         if (lastId == null) {
-            list = noticeRepository.findTop20ByUser_UserIdOrderByIdDesc((userId));
+            list = noticeRepository.findTop20ByReceiverIdAndReceiverTypeOrderByIdDesc(receiverId,type);
         } else {
-            list = noticeRepository.findByUser_UserIdAndIdLessThanOrderByIdDesc(
-                    userId,
+            list = noticeRepository.findByReceiverIdAndReceiverTypeAndIdLessThanOrderByIdDesc(
+                    receiverId,
+                    type,
                     lastId,
                     PageRequest.of(0, 20)
             );
@@ -47,36 +42,36 @@ public class NotificationService {
                 .map(noticeMapper::toNotificationResponse)
                 .toList();
     }
-    public long countUnread(Long userId) {
-        return noticeRepository.countByUser_UserIdAndIsReadFalse(userId);
+    public long countUnread(String userId,ReceiverType receiverType) {
+        return noticeRepository.countByReceiverIdAndReceiverTypeAndIsReadFalse(userId,receiverType);
     }
 
-    public void markAsRead(Long id, Long userId) {
+    public void markAsRead(Long id, String receiverId,ReceiverType type) {
         Notification n = noticeRepository.findById(id).orElseThrow();
-
-        if (!n.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Forbidden");
+        if (!n.getReceiverId().equals(receiverId)||n.getReceiverType() != type) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
         n.setIsRead(true);
+        noticeRepository.save(n);
     }
 
-    public void markAsUnread(Long id, Long userId) {
+    public void markAsUnread(Long id, String receiverId,ReceiverType type) {
         Notification n = noticeRepository.findById(id)
                 .orElseThrow();
 
-        if (!n.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Forbidden");
+        if (!n.getReceiverId().equals(receiverId)||n.getReceiverType() != type) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
         n.setIsRead(false);
     }
 
-    public void delete(Long id, Long userId) {
+    public void delete(Long id, String receiverId, ReceiverType type) {
         Notification n = noticeRepository.findById(id).orElseThrow();
 
-        if (!n.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Forbidden");
+        if (!n.getReceiverId().equals(receiverId)||n.getReceiverType() != type) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
         noticeRepository.delete(n);
