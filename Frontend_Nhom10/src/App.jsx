@@ -1,7 +1,12 @@
 import { Toaster } from "sonner";
 import { BrowserRouter, Routes, Route } from "react-router";
-import UsersManagementPage from "./pages/admin/UsersManamentPage.jsx";
+import LoginPage from "./features/auth/pages/LoginPage.jsx";
+import RegisterPage from "./features/auth/pages/RegisterPage.jsx";
+import DashboardPage from "./features/auth/pages/DashboardPage.jsx";
+import UsersManagementPage from "./features/admin/pages/UsersManagementPage.jsx";
+import HomePage from "./features/home/pages/HomePage.jsx";
 import './App.css'
+
 function App() {
   return (
     <>
@@ -16,7 +21,10 @@ function App() {
       />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<UsersManagementPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/users" element={<UsersManagementPage />} />
         </Routes>
       </BrowserRouter>
