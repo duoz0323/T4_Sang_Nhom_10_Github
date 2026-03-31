@@ -26,10 +26,12 @@ public class JobPosting {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_profile_id")
     CompanyProfile companyProfile;
+
     String title;
     String description;
     BigDecimal salaryRequire;
 
+    //Quan hệ N-N với Location
     @ManyToMany
     @JoinTable(
             name = "job_locations",
@@ -38,10 +40,18 @@ public class JobPosting {
             uniqueConstraints = @UniqueConstraint(columnNames = {"job_posting_id", "location_id"})
     )
     Set<Location> locations = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "jobPosting", cascade = CascadeType.ALL,orphanRemoval = true)
-    Set<JobIndustry> industries = new LinkedHashSet<>();
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "industry_id")
+    Industry industry;
+    //Quan hệ N-N với Skill
+    @ManyToMany
+    @JoinTable(
+            name = "job_skill",
+            joinColumns = @JoinColumn(name = "job_posting_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"job_posting_id", "skill_id"})
+    )
+    Set<Skill> skills = new LinkedHashSet<>();
     LocalDate deadline;
     @Enumerated(EnumType.STRING)
     Status status;

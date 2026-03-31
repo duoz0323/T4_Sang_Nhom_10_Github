@@ -44,7 +44,13 @@ public enum ErrorCode {
     POST_NOT_FOUND(1026,"post not found",HttpStatus.BAD_REQUEST),
     POST_NOT_ACTIVE(1027,"Job not available",HttpStatus.BAD_REQUEST),
     POST_EXPIRED(1028,"Job is expired",HttpStatus.BAD_REQUEST),
-    SKILL_NOT_BELONG_TO_INDUSTRY(1029,"Skill not belong to industry",HttpStatus.BAD_REQUEST)
+    SKILL_NOT_BELONG_TO_INDUSTRY(1029,"Skill not belong to industry",HttpStatus.BAD_REQUEST),
+
+
+    //FILE
+    FILE_REQUIRED(1030,"File is required",HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(1031,"File is invalid",HttpStatus.BAD_REQUEST),
+    ALREADY_APPLIED(1032,"Already applied this posting",HttpStatus.BAD_REQUEST)
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

@@ -6,12 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import stu.edu.Backend_Nhom10.dto.request.IndustryJobRequest;
-import stu.edu.Backend_Nhom10.dto.request.JobCreateRequest;
-import stu.edu.Backend_Nhom10.dto.request.JobUpdateRequest;
-import stu.edu.Backend_Nhom10.dto.request.common.HasIndustryRequest;
+import stu.edu.Backend_Nhom10.dto.request.PostCreateRequest;
+import stu.edu.Backend_Nhom10.dto.request.PostUpdateRequest;
 import stu.edu.Backend_Nhom10.dto.response.JobPostingResponse;
 import stu.edu.Backend_Nhom10.entity.*;
 import stu.edu.Backend_Nhom10.enums.Status;
@@ -23,8 +20,6 @@ import stu.edu.Backend_Nhom10.security.SecurityUtils;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -38,7 +33,7 @@ public class JobPostingService {
     IndustryRepository industryRepository;
     SkillRepository skillRepository;
     SecurityUtils securityUtils;
-    public JobPostingResponse createPost(JobCreateRequest request){
+    public JobPostingResponse createPost(PostCreateRequest request){
         String userId = securityUtils.getObject();
         CompanyProfile company = companyProfileRepository
                 .findByUserId(userId)
@@ -48,17 +43,24 @@ public class JobPostingService {
         //--mapping location
         Set<Location> locations = new HashSet<>(locationRepository.findAllById(request.getLocations()));
         post.setLocations(locations);
-        //--mapping industries + skills
-        Set<JobIndustry> jobIndustries = buildJobIndustries(request, post);
-        post.setIndustries(jobIndustries);
+        Industry industry = industryRepository.findById(request.getIndustryId())
+                .orElseThrow(() -> new AppException(ErrorCode.INDUSTRY_NOT_FOUND));
+
+        post.setIndustry(industry);
+        Set<Skill> skills = new HashSet<>(skillRepository.findAllById(request.getSkillIds()));
+        post.setSkills(skills);
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
 
-    public JobPostingResponse updatePost(String id,JobUpdateRequest updateRequest){
+    public JobPostingResponse updatePost(String id, PostUpdateRequest updateRequest){
         JobPosting post = jobPostingRepository.findById(id).orElseThrow(
                 () ->new AppException(ErrorCode.POST_NOT_EXISTED)
         );
+        String userId = securityUtils.getObject();
+        if(companyProfileRepository.findByUserId(userId).isEmpty()){
+            throw new AppException(ErrorCode.PROFILE_NOT_FOUND);
+        }
         if (post.getStatus() == Status.CLOSED || post.getStatus() == Status.EXPIRED) {
             throw new AppException(ErrorCode.INVALID_ADJUST_POST);
         }
@@ -67,77 +69,10 @@ public class JobPostingService {
             Set<Location> locations = new HashSet<>(locationRepository.findAllById(updateRequest.getLocations()));
             post.setLocations(locations);
         }
-
-        // ===== update industries + skills =====
-        if (updateRequest.getIndustries() != null) {
-            post.getIndustries().clear();
-
-            Set<JobIndustry> jobIndustries = buildJobIndustries(updateRequest, post);
-
-            for (JobIndustry ji : jobIndustries) {
-                ji.setJobPosting(post);
-                post.getIndustries().add(ji);
-            }
-        }
+        Set<Skill> skills = new HashSet<>(skillRepository.findAllById(updateRequest.getSkillIds()));
+        post.setSkills(skills);
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
-    }
-    private Set<JobIndustry> buildJobIndustries(HasIndustryRequest request, JobPosting post) {
-
-        // ===== preload industries =====
-        List<String> industryNames = request.getIndustries().stream()
-                .map(IndustryJobRequest::getNameIndustry)
-                .toList();
-
-        List<Industry> industries = industryRepository.findByNameIndustryIn(industryNames);
-
-        Map<String, Industry> industryMap = industries.stream()
-                .collect(Collectors.toMap(Industry::getNameIndustry, Function.identity()));
-
-        return request.getIndustries().stream().map(req -> {
-
-            Industry industry = industryMap.get(req.getNameIndustry());
-            if (industry == null) {
-                throw new AppException(ErrorCode.INDUSTRY_NOT_FOUND);
-            }
-
-            JobIndustry jobIndustry = new JobIndustry();
-            jobIndustry.setJobPosting(post);
-            jobIndustry.setIndustry(industry);
-
-            // ===== preload skills =====
-            List<Skill> skills = skillRepository.findAllById(req.getSkillIds());
-
-            Map<Long, Skill> skillMap = skills.stream()
-                    .collect(Collectors.toMap(Skill::getSkillId, Function.identity()));
-
-            Set<JobSkill> jobSkills = req.getSkillIds().stream().map(skillId -> {
-
-                Skill skill = skillMap.get(skillId);
-
-                if (skill == null) {
-                    throw new AppException(ErrorCode.SKILL_NOT_FOUND);
-                }
-
-                // 🔥 validate skill thuộc industry
-                if (!skill.getIndustry().getIndustryId()
-                        .equals(industry.getIndustryId())) {
-                    throw new AppException(ErrorCode.SKILL_NOT_BELONG_TO_INDUSTRY);
-                }
-
-                JobSkill js = new JobSkill();
-                js.setJobIndustry(jobIndustry);
-                js.setSkill(skill);
-
-                return js;
-
-            }).collect(Collectors.toSet());
-
-            jobIndustry.setJobSkills(jobSkills);
-
-            return jobIndustry;
-
-        }).collect(Collectors.toSet());
     }
 
     public JobPostingResponse closePost(String id) {
@@ -221,7 +156,7 @@ public class JobPostingService {
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
     //==================SYSTEM=================
-    @Scheduled(cron = "0 0 0 * * ?") // mỗi ngày 0h
+    @Scheduled(cron = "0 * * * * ?") // mỗi ngày 0h
     @Transactional
     public void autoExpireJobs() {
         List<JobPosting> jobs = jobPostingRepository

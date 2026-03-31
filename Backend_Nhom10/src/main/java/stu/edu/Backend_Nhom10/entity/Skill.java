@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @Builder
@@ -15,9 +18,13 @@ public class Skill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long skillId;
+    @Column(nullable = false,unique = true) // không được phép null, và giá trị là duy nhất
     String skillName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "industry_id")
     Industry industry;
+
+    @ManyToMany(mappedBy = "skills")
+    Set<JobPosting> jobPostings = new HashSet<>();
 }

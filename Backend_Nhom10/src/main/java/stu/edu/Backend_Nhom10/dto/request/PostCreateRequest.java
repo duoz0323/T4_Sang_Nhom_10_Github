@@ -1,21 +1,20 @@
 package stu.edu.Backend_Nhom10.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import stu.edu.Backend_Nhom10.dto.request.IndustryJobRequest;
-import stu.edu.Backend_Nhom10.dto.request.common.HasIndustryRequest;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class JobCreateRequest implements HasIndustryRequest {
+public class PostCreateRequest {
     @NotBlank
     String title;
     String description;
@@ -23,6 +22,8 @@ public class JobCreateRequest implements HasIndustryRequest {
     BigDecimal salaryRequire;
     List<Long> locations;
     LocalDate deadline;
+    @NotNull(message = "NOT_BLANK")
+    Long industryId;
     @NotEmpty(message = "NOT_BLANK")
-    List<IndustryJobRequest> industries;
+    List<Long> skillIds;
 }
