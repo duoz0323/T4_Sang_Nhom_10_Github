@@ -21,3 +21,7 @@ idp:
   client-id: webtuyendung_id
   client-secret: QiLoWw2to5vHqdlrqUUPOeKr0CyPkB6L
   realm: webtuyendung-nhom10
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_CLOUD_NAME}
+  api-secret: ${CLOUDINARY_API_KEY}

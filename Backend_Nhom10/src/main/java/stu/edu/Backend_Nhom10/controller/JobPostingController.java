@@ -7,8 +7,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import stu.edu.Backend_Nhom10.dto.ApiResponse;
-import stu.edu.Backend_Nhom10.dto.request.JobCreateRequest;
-import stu.edu.Backend_Nhom10.dto.request.JobUpdateRequest;
+import stu.edu.Backend_Nhom10.dto.request.PostCreateRequest;
+import stu.edu.Backend_Nhom10.dto.request.PostUpdateRequest;
 import stu.edu.Backend_Nhom10.dto.response.JobPostingResponse;
 import stu.edu.Backend_Nhom10.enums.Status;
 import stu.edu.Backend_Nhom10.service.JobPostingService;
@@ -23,7 +23,7 @@ import java.util.List;
 public class JobPostingController {
     JobPostingService jobPostingService;
     @PostMapping
-    ApiResponse<JobPostingResponse> createPost(@RequestBody @Valid JobCreateRequest request){
+    ApiResponse<JobPostingResponse> createPost(@RequestBody @Valid PostCreateRequest request){
         return ApiResponse.<JobPostingResponse>builder()
                 .result(jobPostingService.createPost(request))
                 .build();
@@ -32,7 +32,7 @@ public class JobPostingController {
     @PutMapping("/{id}")
     public ApiResponse<JobPostingResponse> updatePost(
             @PathVariable String id,
-            @RequestBody @Valid JobUpdateRequest request) {
+            @RequestBody @Valid PostUpdateRequest request) {
 
         return ApiResponse.<JobPostingResponse>builder()
                 .result(jobPostingService.updatePost(id, request))

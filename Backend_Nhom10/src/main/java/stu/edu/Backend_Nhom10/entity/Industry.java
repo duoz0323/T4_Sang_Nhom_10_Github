@@ -18,6 +18,7 @@ public class Industry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long industryId;
+    @Column(nullable = false, unique = true)
     String nameIndustry;
 
     @OneToMany(mappedBy = "industry",fetch = FetchType.LAZY)

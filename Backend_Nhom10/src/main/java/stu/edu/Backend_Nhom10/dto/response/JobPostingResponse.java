@@ -3,7 +3,7 @@ package stu.edu.Backend_Nhom10.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import stu.edu.Backend_Nhom10.entity.Location;
+import stu.edu.Backend_Nhom10.enums.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,12 +16,13 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class JobPostingResponse {
     String jobPostingId;
-    String companyProfileId;
+    CompanyProfileResponse companyProfile;
     String title;
     String description;
     BigDecimal salaryRequire;
     List<LocationResponse> locations;
-    List<IndustryJobPostingResponse> industries;
+    IndustryResponse industry;
+    List<SkillResponse> skills;
     LocalDate deadline;
-    String status;
+    Status status;
 }
