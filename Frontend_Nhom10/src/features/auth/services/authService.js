@@ -1,4 +1,4 @@
-import { authAPI } from '../../../services/api';
+import { authAPI, profileAPI } from '../../../services/api';
 
 // Save auth data to localStorage
 const saveAuthData = (data) => {
@@ -8,6 +8,7 @@ const saveAuthData = (data) => {
   const expiresIn = data.expiresIn || data.expires_in;
   
   localStorage.setItem('accessToken', accessToken);
+  localStorage.setItem('token', accessToken); // Also save as 'token' for compatibility
   localStorage.setItem('tokenType', tokenType);
   localStorage.setItem('expiresIn', expiresIn);
   
@@ -49,6 +50,38 @@ const authService = {
         const authData = response.data.result;
         saveAuthData(authData);
         localStorage.setItem('userType', 'candidate');
+        
+        // Fetch user profile
+        try {
+          const profileResponse = await profileAPI.getMyCandidateProfile();
+          console.log('👤 Candidate profile response:', profileResponse.data);
+          
+          if (profileResponse.data.code === 1000) {
+            const userProfile = profileResponse.data.result;
+            // Format user data for AuthContext
+            const userData = {
+              id: userProfile.candidateProfileId,
+              name: userProfile.fullName || userProfile.email?.split('@')[0] || 'User',
+              email: userProfile.email,
+              avatar: userProfile.avatar || null,
+              role: 'APPLICANT', // Force APPLICANT role
+              ...userProfile
+            };
+            console.log('👤 Saving candidate user data:', userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch profile:', profileError);
+          // Continue with basic user data
+          const basicUserData = {
+            id: authData.userId || email,
+            name: email.split('@')[0],
+            email: email,
+            avatar: null,
+            role: 'APPLICANT'
+          };
+          localStorage.setItem('user', JSON.stringify(basicUserData));
+        }
         
         return {
           success: true,
@@ -111,6 +144,36 @@ const authService = {
         const authData = response.data.result;
         saveAuthData(authData);
         localStorage.setItem('userType', 'company');
+        
+        // Fetch company profile
+        try {
+          const profileResponse = await profileAPI.getMyCompanyProfile();
+          console.log('🏢 Company profile response:', profileResponse.data);
+          
+          if (profileResponse.data.code === 1000) {
+            const companyProfile = profileResponse.data.result;
+            const userData = {
+              id: companyProfile.companyProfileId,
+              name: companyProfile.companyName || companyProfile.email?.split('@')[0] || 'Company',
+              email: companyProfile.email,
+              avatar: companyProfile.logo || null,
+              role: 'COMPANY', // Force COMPANY role
+              ...companyProfile
+            };
+            console.log('🏢 Saving company user data:', userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch company profile:', profileError);
+          const basicUserData = {
+            id: authData.userId || email,
+            name: email.split('@')[0],
+            email: email,
+            avatar: null,
+            role: 'COMPANY'
+          };
+          localStorage.setItem('user', JSON.stringify(basicUserData));
+        }
         
         return {
           success: true,

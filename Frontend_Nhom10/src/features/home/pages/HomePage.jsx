@@ -1,234 +1,539 @@
-import { useState, useEffect } from 'react';
-import jobService from '../../../services/jobService';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { jobAPI, locationAPI, skillAPI } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import HeroSection from '../components/HeroSection';
-import SearchBox from '../components/SearchBox';
-import FilterSidebar from '../components/FilterSidebar';
-import JobCard from '../components/JobCard';
+
+// Mock data for public homepage (when not logged in)
+const MOCK_LOCATIONS = [
+  { id: 1, city: 'Hồ Chí Minh' },
+  { id: 2, city: 'Hà Nội' },
+  { id: 3, city: 'Đà Nẵng' },
+  { id: 4, city: 'Cần Thơ' },
+  { id: 5, city: 'Hải Phòng' },
+];
+
+const MOCK_SKILLS = [
+  { skillId: 1, name: 'React' },
+  { skillId: 2, name: 'Java' },
+  { skillId: 3, name: 'Python' },
+  { skillId: 4, name: 'JavaScript' },
+  { skillId: 5, name: 'Node.js' },
+  { skillId: 6, name: 'SQL' },
+  { skillId: 7, name: 'Marketing' },
+  { skillId: 8, name: 'Sales' },
+];
+
+const MOCK_JOBS = [
+  {
+    jobPostingId: 1,
+    title: 'Senior Frontend Developer',
+    description: 'Công ty ABC - Hồ Chí Minh',
+    salaryRequire: 30000000,
+    status: 'ACTIVE',
+    locations: [{ city: 'Hồ Chí Minh' }],
+    industries: [{
+      skills: [
+        { skillName: 'React' },
+        { skillName: 'TypeScript' },
+        { skillName: 'Node.js' }
+      ]
+    }]
+  },
+  {
+    jobPostingId: 2,
+    title: 'Backend Java Developer',
+    description: 'Công ty XYZ - Hà Nội',
+    salaryRequire: 25000000,
+    status: 'ACTIVE',
+    locations: [{ city: 'Hà Nội' }],
+    industries: [{
+      skills: [
+        { skillName: 'Java' },
+        { skillName: 'Spring Boot' },
+        { skillName: 'MySQL' }
+      ]
+    }]
+  },
+  {
+    jobPostingId: 3,
+    title: 'Marketing Manager',
+    description: 'Công ty DEF - Đà Nẵng',
+    salaryRequire: 20000000,
+    status: 'ACTIVE',
+    locations: [{ city: 'Đà Nẵng' }],
+    industries: [{
+      skills: [
+        { skillName: 'Marketing' },
+        { skillName: 'SEO' },
+        { skillName: 'Content' }
+      ]
+    }]
+  }
+];
 
 const HomePage = () => {
+  const { isAuthenticated } = useAuth();
   const [jobs, setJobs] = useState([]);
-  const [filteredJobs, setFilteredJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const jobsPerPage = 10;
+  const [error, setError] = useState(null);
+  
+  // Search state
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+  const [locations, setLocations] = useState(MOCK_LOCATIONS);
+  const [skills, setSkills] = useState(MOCK_SKILLS);
 
-  const [filters, setFilters] = useState({
-    keyword: '',
-    location: '',
-    industry: '',
-    salaryRange: [0, 200000000],
-  });
+  // Fetch locations and skills - ALWAYS start with mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      // Set mock data immediately
+      setLocations(MOCK_LOCATIONS);
+      setSkills(MOCK_SKILLS);
+      console.log('📦 Set initial mock data - Locations:', MOCK_LOCATIONS.length, 'Skills:', MOCK_SKILLS.length);
+      
+      // Try to fetch from API only if authenticated
+      if (!isAuthenticated) {
+        console.log('ℹ️ Not authenticated, using mock data only');
+        return;
+      }
+      
+      try {
+        console.log('🔄 Attempting to fetch from API...');
+        const [locationsRes, skillsRes] = await Promise.all([
+          locationAPI.getAll(),
+          skillAPI.getAll()
+        ]);
+        
+        console.log('📍 Locations API response:', locationsRes.data);
+        console.log('🎯 Skills API response:', skillsRes.data);
+        
+        // Check for authentication errors
+        if (locationsRes?.data?.code === 1006 || skillsRes?.data?.code === 1006) {
+          console.warn('⚠️ API returned Unauthenticated - keeping mock data');
+          return;
+        }
+        
+        // Only update if we got valid data
+        if (locationsRes?.data?.result && locationsRes.data.result.length > 0) {
+          setLocations(locationsRes.data.result);
+          console.log('✅ Updated locations from API:', locationsRes.data.result.length);
+        }
+        
+        if (skillsRes?.data?.result && skillsRes.data.result.length > 0) {
+          setSkills(skillsRes.data.result);
+          console.log('✅ Updated skills from API:', skillsRes.data.result.length);
+        }
+      } catch (err) {
+        console.error('❌ API Error:', err.response?.data || err.message);
+        console.log('⚠️ Keeping mock data');
+      }
+    };
+    fetchData();
+  }, [isAuthenticated]);
+
+  const handleSearch = () => {
+    console.log('🔍 Searching for:', searchKeyword, 'in', searchLocation);
+    // TODO: Implement search functionality
+  };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [jobs, filters]);
-
-  const fetchJobs = async () => {
-    try {
+    const fetchJobs = async () => {
       setLoading(true);
-      const data = await jobService.getPublicJobs();
-      setJobs(data);
-    } catch (error) {
-      console.error('Error loading jobs:', error);
-    } finally {
+      console.log('🔍 Fetching jobs - isAuthenticated:', isAuthenticated);
+      
+      // Set mock data first as fallback
+      let finalJobs = MOCK_JOBS.slice(0, 3);
+      
+      // Try API if authenticated
+      if (isAuthenticated) {
+        try {
+          console.log('🔄 Attempting to fetch jobs from API...');
+          const response = await jobAPI.getAllActiveJobs();
+          console.log('✅ API Response:', response.data);
+          
+          // Check for auth errors
+          if (response?.data?.code === 1006) {
+            console.warn('⚠️ API returned Unauthenticated (1006)');
+          } else if (response?.data?.result && response.data.result.length > 0) {
+            const jobsData = response.data.result;
+            console.log('📊 Got', jobsData.length, 'jobs from API');
+            finalJobs = jobsData.slice(0, 3);
+          }
+        } catch (err) {
+          console.error('❌ Error fetching jobs:', err.response?.data || err.message);
+        }
+      }
+      
+      // Always set jobs (either from API or mock)
+      console.log('📦 Setting jobs:', finalJobs.length);
+      setJobs(finalJobs);
+      setError(null);
       setLoading(false);
-    }
+    };
+
+    fetchJobs();
+  }, [isAuthenticated]);
+
+  const getEmploymentTypeLabel = (status) => {
+    // Sử dụng status từ job thay vì employmentType
+    const labels = {
+      'ACTIVE': 'Full-time',
+      'PENDING': 'Pending',
+      'CLOSED': 'Closed',
+      'EXPIRED': 'Expired',
+      'REJECTED': 'Rejected'
+    };
+    return labels[status] || 'Full-time';
   };
 
-  const applyFilters = () => {
-    let filtered = [...jobs];
-
-    if (filters.keyword) {
-      const keyword = filters.keyword.toLowerCase();
-      filtered = filtered.filter(
-        (job) =>
-          job.title?.toLowerCase().includes(keyword) ||
-          job.description?.toLowerCase().includes(keyword)
-      );
-    }
-
-    if (filters.location) {
-      filtered = filtered.filter((job) =>
-        job.locations?.some((loc) => loc.city === filters.location)
-      );
-    }
-
-    if (filters.industry) {
-      filtered = filtered.filter((job) =>
-        job.industries?.some((ind) => ind.nameIndustry === filters.industry)
-      );
-    }
-
-    const [minSalary, maxSalary] = filters.salaryRange;
-    filtered = filtered.filter(
-      (job) =>
-        job.salaryRequire >= minSalary && job.salaryRequire <= maxSalary
-    );
-
-    setFilteredJobs(filtered);
-    setCurrentPage(1);
+  const getEmploymentTypeBadgeClass = (status) => {
+    const classes = {
+      'ACTIVE': 'bg-secondary-container text-on-secondary-container',
+      'PENDING': 'bg-tertiary-fixed text-on-tertiary-fixed',
+      'CLOSED': 'bg-surface-container text-on-surface-variant',
+      'EXPIRED': 'bg-surface-container text-on-surface-variant',
+      'REJECTED': 'bg-surface-container text-on-surface-variant'
+    };
+    return classes[status] || 'bg-secondary-container text-on-secondary-container';
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters({ ...filters, ...newFilters });
+  const formatSalary = (salaryRequire) => {
+    if (!salaryRequire) return 'Thỏa thuận';
+    return `${salaryRequire.toLocaleString()} VNĐ`;
   };
 
-  const indexOfLastJob = currentPage * jobsPerPage;
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  const getCompanyName = (description) => {
+    // Extract company name from description (format: "company - location")
+    if (!description) return 'Company';
+    const parts = description.split(' - ');
+    return parts[0] || 'Company';
+  };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const getLocation = (locations) => {
+    if (!locations || locations.length === 0) return 'Chưa xác định';
+    return locations.map(loc => loc.city).join(', ');
+  };
+
+  const getSkills = (industries) => {
+    if (!industries || industries.length === 0) return [];
+    const allSkills = [];
+    industries.forEach(industry => {
+      if (industry.skills && industry.skills.length > 0) {
+        industry.skills.forEach(skill => {
+          allSkills.push(skill.skillName);
+        });
+      }
+    });
+    return allSkills;
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="bg-surface font-body text-on-surface selection:bg-secondary-container selection:text-on-secondary-container flex flex-col min-h-screen">
+      {/* Header */}
       <Header />
 
-      <main className="flex-1 bg-gray-50">
-        <div className="bg-white">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid lg:grid-cols-3 gap-8 items-start">
-              <div className="lg:col-span-2">
-                <HeroSection />
-              </div>
-              <div className="lg:col-span-1">
-                <SearchBox onSearch={handleFilterChange} />
-              </div>
-            </div>
+      <main className="pt-16 flex-1">
+        {/* Hero Section */}
+        <section className="relative min-h-[670px] flex items-center overflow-hidden bg-primary-container">
+          <div className="absolute inset-0 opacity-40">
+            <img className="w-full h-full object-cover" alt="Modern high-end office interior with glass walls and professional atmosphere at twilight with soft blue and teal lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwHEMTNrS-jAJNuHkwPB3MOICE6iPEc7qfmlm9SMkI8pHo6XLPvPSamT9k8IC6HC1x-IA7oRs_lja7poLVwWNFFBaIoRDHU-c7XjKilsJrvZ2wMD2zsUeB50otL5PTQCfPkxfeFw8qDm61Xk24fkwUq4L_WXJH6-tw-D8kBsN2O7fYlpzv9zqtx6_7ufOd30hTVmXK6p4lINX9NWyEIVupiGtW2giUq__SPslL7megVTAlV1tK4kxzvGslWBbW9JIOLJWYoHoOVq5s" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-container via-primary-container/80 to-transparent"></div>
           </div>
-        </div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-1">
-              <FilterSidebar
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                totalJobs={filteredJobs.length}
-              />
-            </div>
-
-            <div className="lg:col-span-3">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Hiện thi{' '}
-                  <span className="text-teal-600">{filteredJobs.length}</span>{' '}
-                  cơ hội cao cấp mới nhất
-                </h2>
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <option>Sắp xếp: Mới nhất</option>
-                  <option>Lương cao nhất</option>
-                  <option>Lương thấp nhất</option>
-                  <option>Gần hết hạn</option>
-                </select>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20 text-secondary-fixed text-xs font-bold tracking-widest uppercase">
+                <span className="material-symbols-outlined text-sm">verified</span>
+                Nền tảng tuyển dụng Executive số 1
               </div>
 
-              {loading && (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
-                </div>
-              )}
+              <h1 className="text-4xl md:text-5xl font-extrabold font-headline text-white leading-[1.1] tracking-tighter">
+                Kiến tạo <span className="text-secondary-fixed">Sự nghiệp</span> <br /> Tầm cao mới.
+              </h1>
 
-              {!loading && filteredJobs.length === 0 && (
-                <div className="text-center py-12 bg-white rounded-lg shadow">
-                  <p className="text-gray-600 text-lg">
-                    Không tìm thấy công việc phù hợp
-                  </p>
-                  <button
-                    onClick={() => setFilters({
-                      keyword: '',
-                      location: '',
-                      industry: '',
-                      salaryRange: [0, 200000000],
-                    })}
-                    className="mt-4 px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-                  >
-                    Xóa bộ lọc
-                  </button>
-                </div>
-              )}
+              <p className="text-on-primary-container text-base max-w-xl leading-relaxed font-light">
+                Kết nối những nhà lãnh đạo xuất sắc với những cơ hội nghề nghiệp đẳng cấp nhất tại Việt Nam và khu vực.
+              </p>
 
-              {!loading && currentJobs.length > 0 && (
+              {/* Quick Search Bar (Integrated in Hero) */}
+              <div className="bg-surface-container-lowest/95 backdrop-blur-md p-2 rounded-xl shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl">
+                {/* Keyword Input */}
+                <div className="flex-1 relative">
+                  <div className="flex items-center px-4 py-2.5 gap-3 border-r border-outline-variant/20">
+                    <span className="material-symbols-outlined text-outline">work</span>
+                    <select 
+                      className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium outline-none cursor-pointer" 
+                      value={searchKeyword}
+                      onChange={(e) => setSearchKeyword(e.target.value)}
+                    >
+                      <option value="">Chức danh, kỹ năng...</option>
+                      {skills.map((skill) => (
+                        <option key={skill.skillId} value={skill.name}>{skill.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Location Select */}
+                <div className="flex-1 relative">
+                  <div className="flex items-center px-4 py-2.5 gap-3">
+                    <span className="material-symbols-outlined text-outline">location_on</span>
+                    <select 
+                      className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium outline-none cursor-pointer" 
+                      value={searchLocation}
+                      onChange={(e) => setSearchLocation(e.target.value)}
+                    >
+                      <option value="">Thành phố</option>
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.city}>{loc.city}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleSearch}
+                  className="bg-secondary text-on-secondary px-8 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-on-secondary-container transition-all"
+                >
+                  Tìm kiếm ngay
+                </button>
+              </div>
+            </div>
+
+            <div className="hidden lg:block relative">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 pt-8">
+                  <div className="bg-surface-container-lowest p-5 rounded-xl shadow-xl transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+                        <span className="material-symbols-outlined text-sm">trending_up</span>
+                      </div>
+                      <div>
+                        <div className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Tăng trưởng</div>
+                        <div className="text-lg font-black text-primary">+45% Lương</div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-on-surface-variant leading-relaxed">Dành cho các vị trí quản lý cấp cao tại các tập đoàn đa quốc gia.</p>
+                  </div>
+                  <img className="w-full h-56 object-cover rounded-xl shadow-lg grayscale hover:grayscale-0 transition-all duration-700" alt="Confident Asian female executive smiling in a minimalist professional setting with warm natural sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYafaoPVdAQdIqLc_o6Q-0L0cDXdYOgvJ_np2qlwUmkfVtXfNzcvbePwFBj1pnuL7IoabYJBEIfMvwyK5RfGfw77cJO_GiDYzbelgEApo6wOg_HWGQ01OT2mhvrb3LulGRGwfUHAqd1FKCKm9qL8cFmcE7kkryxI6iPjcxKZWwDtWnsq-o6jMwdi5OQRQ44iPNNLcD7Mbi_V0zKSvd_6C3bzc1-XMrVPhJPXJwjpmXfcV7dTkjbh6Yuc9Qce9oQS_fsUwzZn-J4QKm" />
+                </div>
                 <div className="space-y-4">
-                  {currentJobs.map((job) => (
-                    <JobCard key={job.jobPostingId} job={job} />
-                  ))}
+                  <img className="w-full h-64 object-cover rounded-xl shadow-lg grayscale hover:grayscale-0 transition-all duration-700" alt="Professional male executive in a tailored navy suit adjusting his cufflinks in a bright modern office corridor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCnScv-jM6zYtsRAw348i9ntSXjP0zH8Fy26gKqXWz3Le5Hcpo70rEz8KpEkxfINN2oiYpSwQkpbwiXNa2O_OAshjciv2mLs3ik0r8oS7Cqlbz89hhdoDZe-FBr886jPZrJ-nVoPeJQQdA6yr_Bo_Rkdt6_HK5rBjDuDDC-kBiSP8Xaz4_xQizVA9-0o-TZIhoQyuCFpSgwreKghbaCWiAKSd2ruEUEtX4DJVc3XU-5JFjpbH83qG5Hz1q6RieRYBds76Fd18IyJm8" />
+                  <div className="bg-secondary p-5 rounded-xl shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-500 text-on-secondary">
+                    <div className="text-3xl font-black mb-1">500+</div>
+                    <div className="text-sm font-medium opacity-80 italic">Đối tác chiến lược Fortune 500 tin tưởng JobMatch</div>
+                  </div>
                 </div>
-              )}
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ←
-                  </button>
-
-                  {[...Array(Math.min(5, totalPages))].map((_, index) => {
-                    let pageNumber;
-                    if (totalPages <= 5) {
-                      pageNumber = index + 1;
-                    } else if (currentPage <= 3) {
-                      pageNumber = index + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNumber = totalPages - 4 + index;
-                    } else {
-                      pageNumber = currentPage - 2 + index;
-                    }
-
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => handlePageChange(pageNumber)}
-                        className={`px-4 py-2 rounded-lg ${
-                          currentPage === pageNumber
-                            ? 'bg-teal-600 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
-
-                  {totalPages > 5 && currentPage < totalPages - 2 && (
-                    <>
-                      <span className="px-2">...</span>
-                      <button
-                        onClick={() => handlePageChange(totalPages)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Hot Industries (Bento Grid Style) */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+            <div className="max-w-xl">
+              <span className="text-secondary font-bold tracking-widest uppercase text-xs">Danh mục hàng đầu</span>
+              <h2 className="text-2xl font-black font-headline mt-2 text-primary tracking-tight">Khám phá các lĩnh vực dẫn đầu thị trường</h2>
+            </div>
+            <button className="group flex items-center gap-2 text-on-surface font-bold text-sm hover:text-secondary transition-colors">
+              Xem tất cả ngành nghề 
+              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {/* IT Industry */}
+            <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
+              <div className="relative h-56 rounded-2xl overflow-hidden bg-slate-900">
+                <img className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="High tech digital circuit board background with glowing teal and blue binary data patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-1_uc3ziR2-N10mmQiR4p5f4ESrarnRbKPh0UW6n8EqhG8g1NRcuZnJniDwhAinC6ZLP3w6ggiHDXlSq7CmIeCkLf_pf6svN4rYGl2mhF_FDXSTUlwsAIJoKej4AvB_ThdEj2iq-m3l5LG0Da1Y9nY5Jp3jZy1RIXzhJt4Y4z3i-6rvA9cFQVF3W1qUT_316K3ajeDIBjsWAxWwgTbYQHxno33-A6uU99UeSV_uSszs1LagLTX2yTntvS4xPQdBggXemmivL-frSr" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                <div className="absolute bottom-5 left-5 text-white">
+                  <h3 className="text-xl font-bold font-headline">Công nghệ (IT)</h3>
+                  <p className="text-sm text-slate-300">1,240 việc làm mới</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Marketing */}
+            <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
+              <div className="relative h-56 rounded-2xl overflow-hidden bg-secondary-container">
+                <div className="absolute top-5 right-5">
+                  <span className="material-symbols-outlined text-3xl text-on-secondary-container/30">campaign</span>
+                </div>
+                <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                  <h3 className="text-xl font-bold font-headline text-on-secondary-container">Marketing &amp; Truyền thông</h3>
+                  <p className="text-sm text-on-secondary-container/70">856 việc làm mới</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Finance */}
+            <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
+              <div className="relative h-56 rounded-2xl overflow-hidden bg-white shadow-sm border border-outline-variant/20 flex flex-col p-6 group-hover:shadow-xl transition-all">
+                <div className="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed mb-auto text-sm">
+                  <span className="material-symbols-outlined text-base">payments</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-headline text-primary">Tài chính</h3>
+                  <p className="text-sm text-on-surface-variant">412 việc làm mới</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Healthcare */}
+            <div className="md:col-span-3 lg:col-span-3 group cursor-pointer">
+              <div className="relative h-56 rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant/10 p-6 flex items-center gap-6 group-hover:bg-white group-hover:shadow-lg transition-all">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold font-headline text-primary">Y tế &amp; Dược phẩm</h3>
+                  <p className="text-sm text-on-surface-variant mb-5">Nhu cầu nhân sự cấp cao đang tăng mạnh trong năm 2024.</p>
+                  <span className="inline-flex items-center gap-2 text-secondary font-bold text-xs uppercase tracking-widest">Tìm hiểu ngay <span className="material-symbols-outlined text-sm">north_east</span></span>
+                </div>
+                <div className="hidden sm:block w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md">
+                  <img className="w-full h-full object-cover" alt="Clean hospital laboratory setting with medical professional in white coat working with high-tech equipment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTe4SeCqINjj2Hc-kGx4O-fTe5ZJPbub-hywo-V4ZolhEn7CmVb_6h6zlEcVus0Sc2o3CK_XX-bxsa845Ri_VxUojL3xtR5XNAmh7PLbUm5NiUbPu4qdwbRNY4sdLFCV3AdaKeqLh-K7LYMeFyBp3IXJYLbqjlGUZvVGyDlR-jssLPFgKM47AGgGgn0_Ii66daWHHjB4DFi86_K7MN3N372Rt-FkFSAAUKmdtLbXnXJKdAW6GFBlXMwmnzPNeewoFnfWg3QYpkGxLx" />
+                </div>
+              </div>
+            </div>
+
+            {/* Logistics */}
+            <div className="md:col-span-3 lg:col-span-3 group cursor-pointer">
+              <div className="relative h-56 rounded-2xl overflow-hidden bg-primary p-6 flex flex-col justify-between group-hover:bg-primary-container transition-all">
+                <img className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" alt="Modern logistics warehouse with stacked containers and robotic arms in a sleek architectural environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2DY_0lEaiOOTmUjgDSaDuAvqGhVIho_hQF5PmKz4KFvZVCqmt8R-6cfv4eXX121WR9y2bQ2jviWgCfvXmrC2TW-vs7-dxtPicSCn8EOsgVm6fQQNkkhfOrzGaJdtN18uumVAd6DsNPAWPaPzkaEoFeRd8TvuDszTr5kUp6uGW-Pz67fBmRSBBMtOX4I2XAlFsWCK12xBNpONTq8nJRBooWtWU4OWfMMIOk9EZROAggZWT4-MVMEpRj30H3C_6wjTa4fwp7k4osakz" />
+                <div className="flex justify-between items-start">
+                  <span className="material-symbols-outlined text-white/50 text-3xl">inventory_2</span>
+                  <span className="bg-secondary/20 text-secondary-fixed text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Hot</span>
+                </div>
+                <div className="text-white">
+                  <h3 className="text-xl font-bold font-headline">Vận tải &amp; Logistics</h3>
+                  <p className="text-sm text-white/60">329 việc làm mới</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Jobs */}
+        <section className="py-16 bg-surface-container-low">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10 space-y-3">
+              <span className="text-secondary font-bold tracking-widest uppercase text-xs">Cơ hội tốt nhất cho bạn</span>
+              <h2 className="text-2xl md:text-3xl font-black font-headline text-primary tracking-tight">Việc làm nổi bật</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* DEBUG INFO */}
+              {console.log('🔵 HomePage render - Loading:', loading, 'Jobs count:', jobs.length, 'Error:', error)}
+              
+              {loading ? (
+                // Loading skeleton
+                [...Array(3)].map((_, index) => (
+                  <div key={index} className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="w-14 h-14 rounded-xl bg-surface-container"></div>
+                      <div className="h-6 w-20 bg-surface-container rounded-full"></div>
+                    </div>
+                    <div className="h-6 bg-surface-container rounded mb-2 w-3/4"></div>
+                    <div className="h-4 bg-surface-container rounded mb-5 w-1/2"></div>
+                    <div className="flex gap-2 mb-6">
+                      <div className="h-6 w-20 bg-surface-container rounded-lg"></div>
+                      <div className="h-6 w-16 bg-surface-container rounded-lg"></div>
+                    </div>
+                    <div className="h-12 bg-surface-container rounded"></div>
+                  </div>
+                ))
+              ) : error ? (
+                // Error state
+                <div className="col-span-full text-center py-12">
+                  <p className="text-outline mb-4">Không thể tải danh sách việc làm</p>
+                  <p className="text-sm text-on-surface-variant">{error}</p>
+                </div>
+              ) : jobs.length === 0 ? (
+                // Empty state
+                <div className="col-span-full text-center py-12">
+                  <p className="text-outline">Chưa có việc làm nào</p>
+                </div>
+              ) : (
+                // Job cards with real data
+                jobs.map((job, index) => (
+                  <Link 
+                    key={job.jobPostingId} 
+                    to={`/jobs/${job.jobPostingId}`}
+                    className="bg-surface-container-lowest p-6 rounded-xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group border border-outline-variant/5 block"
+                  >
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center p-2.5 border border-outline-variant/10 overflow-hidden">
+                        <div className="bg-primary-container w-full h-full flex items-center justify-center rounded-lg text-white font-black text-xs">
+                          {getCompanyName(job.description).substring(0, 3).toUpperCase()}
+                        </div>
+                      </div>
+                      <span className={`${getEmploymentTypeBadgeClass(job.status)} text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase`}>
+                        {getEmploymentTypeLabel(job.status)}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-primary mb-2 group-hover:text-secondary transition-colors font-headline">
+                      {job.title}
+                    </h3>
+                    <p className="text-on-surface-variant font-medium text-xs mb-5 flex items-center gap-1">
+                      {getCompanyName(job.description)} <span className="text-outline mx-1">•</span> {getLocation(job.locations)}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {getSkills(job.industries).slice(0, 3).map((skill, idx) => (
+                        <span key={idx} className="px-2.5 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded-lg">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center pt-5 border-t border-outline-variant/10">
+                      <div>
+                        <span className="text-xs text-outline block">Mức lương</span>
+                        <span className="text-base font-black text-primary">
+                          {formatSalary(job.salaryRequire)}
+                        </span>
+                      </div>
+                      <Link 
+                        to={`/jobs/${job.jobPostingId}`}
+                        className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-secondary group-hover:text-on-secondary transition-all"
+                      >
+                        <span className="material-symbols-outlined">chevron_right</span>
+                      </Link>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            <div className="mt-10 text-center">
+              <Link 
+                to="/jobs"
+                className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary-container transition-all shadow-xl shadow-primary/20"
+              >
+                Khám phá thêm 2,500+ công việc
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Newsletter / CTA */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto bg-primary-container rounded-2xl p-10 md:p-16 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
+              <img className="w-full h-full object-cover" alt="Abstract geometric background with sharp professional lines and deep blue corporate patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWmcAJ16TQdlSJVyeCsmlI7aOxB2NrePRiFnTfWRnBmbczeR6cEAkX0Y2T3KxSIyR3-RrhJ0cHVWedmVhUtTpoLpnULRtjkOfQroHST5rcD94M6JXU_fKymgP2TSmuw6s_rFf7iaPa75WypH36jUS3iIZk_VqrPQMZ8uZSBLt0gppQW94U8KrAgQwbNJibHfqNSevq9mx9N8HeG7R3nrA-mIeKfCY-X5gumpfR4NpVBXPaT7CHIp8gwQNGZf46SDMQDmLZUN3VrNEy" />
+            </div>
+            <div className="relative z-10 max-w-2xl">
+              <h2 className="text-2xl md:text-3xl font-black font-headline text-white mb-5 leading-tight">Sẵn sàng bước vào hành trình mới?</h2>
+              <p className="text-on-primary-container text-base mb-8 leading-relaxed font-light">Đăng ký nhận thông báo về các vị trí Executive phù hợp nhất với hồ sơ của bạn mỗi tuần. Không spam, chỉ là những cơ hội tốt nhất.</p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <input className="flex-1 bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-white placeholder:text-white/40 focus:ring-2 focus:ring-secondary focus:bg-white/20 outline-none transition-all" placeholder="Địa chỉ email của bạn" type="email" />
+                <button className="bg-secondary text-on-secondary px-8 py-3 rounded-xl font-bold hover:scale-105 transition-all active:scale-95">Đăng ký ngay</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
+      {/* Footer */}
       <Footer />
     </div>
   );

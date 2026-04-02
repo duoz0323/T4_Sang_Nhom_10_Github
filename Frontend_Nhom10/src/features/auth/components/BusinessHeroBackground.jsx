@@ -3,7 +3,7 @@ const BusinessHeroBackground = () => {
   return (
     <div className="absolute inset-0">
       {/* Fallback gradient background */}
-      <div className="absolute inset-0 bg-linear-to-br from-blue-900 via-slate-800 to-slate-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-slate-800 to-slate-900" />
       
       {/* Business cityscape hero image */}
       <div 
@@ -17,7 +17,7 @@ const BusinessHeroBackground = () => {
       <div className="absolute inset-0 bg-slate-900/40" />
       
       {/* Overlay gradient cho phần form */}
-      <div className="absolute inset-0 bg-linear-to-r from-slate-900/60 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-transparent to-transparent" />
     </div>
   );
 };

@@ -1,120 +1,196 @@
-import { Link, useNavigate } from 'react-router';
-import { useState, useEffect } from 'react';
-import { getUserType } from '../../utils/jwtUtils';
+import { Link, useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
-const Header = () => {
-  const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState(null);
+function Header() {
+  const location = useLocation();
+  const { user, logout, isAuthenticated, isApplicant, isCompany, isAdmin } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      setIsLoggedIn(true);
-      setUserType(getUserType(token));
-    }
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('tokenExpiration');
-    setIsLoggedIn(false);
-    setUserType(null);
-    navigate('/login');
+    logout();
+    setShowDropdown(false);
+  };
+
+  // Determine home path based on user role
+  const getHomePath = () => {
+    if (!isAuthenticated) return '/';
+    if (isCompany) return '/company/dashboard';
+    if (isAdmin) return '/users';
+    return '/'; // Applicant
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-teal-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="text-lg font-semibold text-gray-900">
-              The Executive Lens
-            </span>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-outline-variant shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
+        {/* Logo */}
+        <Link to={getHomePath()} className="text-2xl font-manrope font-bold text-primary hover:opacity-80 transition-opacity">
+          JobMatch
+        </Link>
+
+        {/* Navigation Menu - Only show for Applicants or not logged in - centered */}
+        {(!isAuthenticated || isApplicant) && (
+          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
+          <Link 
+            to="/" 
+            className={`font-medium transition-colors pb-1 ${
+              isActive('/') 
+                ? 'text-on-surface border-b-2 border-secondary' 
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            Trang chủ
           </Link>
+          <Link 
+            to="/jobs" 
+            className={`font-medium transition-colors pb-1 ${
+              isActive('/jobs') 
+                ? 'text-on-surface border-b-2 border-secondary' 
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            Tìm việc làm
+          </Link>
+          <Link 
+            to="/companies" 
+            className={`font-medium transition-colors pb-1 ${
+              isActive('/companies') 
+                ? 'text-on-surface border-b-2 border-secondary' 
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            Công ty
+          </Link>
+          <Link 
+            to="/blog" 
+            className={`font-medium transition-colors pb-1 ${
+              isActive('/blog') 
+                ? 'text-on-surface border-b-2 border-secondary' 
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            Blog
+          </Link>
+        </nav>
+        )}
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/"
-              className="text-sm text-gray-700 hover:text-teal-600 transition-colors font-medium border-b-2 border-teal-600 pb-1"
-            >
-              Cơ hội việc làm
-            </Link>
-
-            {userType === 'COMPANY' && (
-              <Link
-                to="/company/jobs"
-                className="text-sm text-gray-700 hover:text-teal-600 transition-colors font-medium"
-              >
-                Danh cho nhà tuyển dụng
-              </Link>
-            )}
-
-            {userType === 'ADMIN' && (
-              <Link
-                to="/admin/pending-jobs"
-                className="text-sm text-gray-700 hover:text-teal-600 transition-colors font-medium"
-              >
-                Duyệt tin tuyển dụng
-              </Link>
-            )}
-
-            <Link
-              to="/about"
-              className="text-sm text-gray-700 hover:text-teal-600 transition-colors font-medium"
-            >
-              Về chúng tôi
-            </Link>
-            <Link
-              to="/contact"
-              className="text-sm text-gray-700 hover:text-teal-600 transition-colors font-medium"
-            >
-              Liên hệ
-            </Link>
-          </nav>
-
-          {/* Auth Buttons */}
-          <div className="flex items-center gap-3">
-            {!isLoggedIn ? (
-              <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm text-gray-700 hover:text-teal-600 transition-colors font-medium"
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-semibold"
-                >
-                  Đăng ký
-                </Link>
-              </>
-            ) : (
-              <>
-                <span className="text-sm text-gray-600 font-medium">
-                  {userType === 'ADMIN' && 'Admin'}
-                  {userType === 'COMPANY' && 'Doanh nghiệp'}
-                  {userType === 'CANDIDATE' && 'Ứng viên'}
+        {/* Right side: Notifications + Login/Avatar - always on right */}
+        <div className="flex items-center gap-4 ml-auto">
+          {isAuthenticated && (
+            <>
+              {/* Notifications */}
+              <button className="relative p-2 hover:bg-surface-container rounded-lg transition-colors">
+                <span className="material-symbols-outlined text-on-surface-variant">
+                  notifications
                 </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
-                >
-                  Đăng xuất
-                </button>
-              </>
-            )}
-          </div>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+              </button>
+            </>
+          )}
+
+          {isAuthenticated ? (
+            /* User Avatar Dropdown */
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user?.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{user?.name?.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-outline-variant overflow-hidden">
+                  {/* User Info */}
+                  <div className="p-4 border-b border-outline-variant">
+                    <p className="font-bold text-on-surface">{user?.name}</p>
+                    <p className="text-sm text-on-surface-variant">{user?.email}</p>
+                    <div className="mt-2">
+                      <span className="text-xs px-2 py-1 rounded-full bg-secondary-container text-on-secondary-container font-semibold">
+                        {user?.role === 'APPLICANT' && 'Ứng viên'}
+                        {user?.role === 'COMPANY' && 'Doanh nghiệp'}
+                        {user?.role === 'ADMIN' && 'Quản trị viên'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="py-2">
+                    {user?.role === 'APPLICANT' && (
+                      <Link
+                        to="/profile"
+                        onClick={() => setShowDropdown(false)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-on-surface-variant">person</span>
+                        <span className="text-sm font-medium">Trang cá nhân</span>
+                      </Link>
+                    )}
+                    {user?.role === 'COMPANY' && (
+                      <Link
+                        to="/company/profile"
+                        onClick={() => setShowDropdown(false)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-on-surface-variant">business</span>
+                        <span className="text-sm font-medium">Hồ sơ công ty</span>
+                      </Link>
+                    )}
+                    <Link
+                      to={user?.role === 'COMPANY' ? '/company/settings' : '/settings'}
+                      onClick={() => setShowDropdown(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-on-surface-variant">settings</span>
+                      <span className="text-sm font-medium">Cài đặt</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-error"
+                    >
+                      <span className="material-symbols-outlined">logout</span>
+                      <span className="text-sm font-medium">Đăng xuất</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Login Button */
+            <Link
+              to="/login"
+              className="bg-secondary text-white px-6 py-2 rounded-lg font-semibold hover:bg-on-secondary-container transition-colors"
+            >
+              Đăng nhập
+            </Link>
+          )}
         </div>
       </div>
     </header>
   );
-};
+}
 
 export default Header;

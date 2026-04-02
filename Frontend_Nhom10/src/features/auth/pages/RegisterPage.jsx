@@ -96,7 +96,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="h-screen flex flex-col lg:flex-row overflow-hidden">
       {/* Left Side - Hero - Hidden on mobile, shown on lg+ */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden order-2 lg:order-1">
         <BusinessHeroBackground />
@@ -161,13 +161,13 @@ const RegisterPage = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col bg-white order-1 lg:order-2">
+      <div className="w-full lg:w-1/2 flex flex-col bg-white order-1 lg:order-2 h-screen overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 sm:p-6 lg:p-8 pb-2">
+        <div className="flex justify-between items-center p-4 sm:p-6 lg:p-8 pb-2 shrink-0">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">JobMatch</h1>
         </div>
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-1">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-1 overflow-y-auto">
           <div className="w-full max-w-md mx-auto">{/* Title */}
             <div className="mb-3">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1.5">Tạo tài khoản mới</h2>

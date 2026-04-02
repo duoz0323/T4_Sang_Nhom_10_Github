@@ -20,16 +20,44 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      // Login as candidate (default)
-      const result = await authService.loginCandidate(formData.email, formData.password);
+      // Try both candidate and company login
+      const [candidateResult, companyResult] = await Promise.allSettled([
+        authService.loginCandidate(formData.email, formData.password),
+        authService.loginCompany(formData.email, formData.password)
+      ]);
       
-      if (result.success) {
-        // Redirect to homepage
-        navigate('/');
+      // Check which one succeeded
+      let result = null;
+      
+      if (candidateResult.status === 'fulfilled' && candidateResult.value.success) {
+        result = candidateResult.value;
+      } else if (companyResult.status === 'fulfilled' && companyResult.value.success) {
+        result = companyResult.value;
+      }
+      
+      if (result) {
+        // Wait a bit for localStorage to be updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get user from localStorage to check role
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        
+        console.log('✅ Login successful! User:', user);
+        
+        // Redirect based on role
+        if (user?.role === 'ADMIN') {
+          window.location.href = '/users'; // Admin dashboard
+        } else if (user?.role === 'COMPANY') {
+          window.location.href = '/company/dashboard'; // Company dashboard
+        } else {
+          window.location.href = '/'; // Applicant homepage
+        }
       } else {
-        setError(result.message);
+        setError('Email hoặc mật khẩu không đúng');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
@@ -46,9 +74,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="h-screen flex flex-col lg:flex-row overflow-hidden">
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 bg-white order-2 lg:order-1">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 bg-white order-2 lg:order-1 h-screen overflow-y-auto">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="mb-6 sm:mb-8">
