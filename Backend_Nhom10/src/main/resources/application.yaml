@@ -5,7 +5,3 @@ spring:
     name: Backend_Nhom10
 server:
   port: 8080
-cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:test}
-  api-key: ${CLOUDINARY_API_KEY:test}
-  api-secret: ${CLOUDINARY_API_SECRET:test}

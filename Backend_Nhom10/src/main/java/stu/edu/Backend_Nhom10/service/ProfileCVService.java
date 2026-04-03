@@ -18,12 +18,14 @@ import stu.edu.Backend_Nhom10.dto.response.ProfileCVResponse;
 import stu.edu.Backend_Nhom10.entity.CandidateProfile;
 import stu.edu.Backend_Nhom10.entity.Industry;
 import stu.edu.Backend_Nhom10.entity.ProfileCV;
+import stu.edu.Backend_Nhom10.entity.Skill;
 import stu.edu.Backend_Nhom10.exception.AppException;
 import stu.edu.Backend_Nhom10.exception.ErrorCode;
 import stu.edu.Backend_Nhom10.mapper.ProfileCVMapper;
 import stu.edu.Backend_Nhom10.repository.CandidateProfileRepository;
 import stu.edu.Backend_Nhom10.repository.IndustryRepository;
 import stu.edu.Backend_Nhom10.repository.ProfileCVRepository;
+import stu.edu.Backend_Nhom10.repository.SkillRepository;
 import stu.edu.Backend_Nhom10.security.SecurityUtils;
 
 import java.io.IOException;
@@ -31,8 +33,10 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,7 @@ public class ProfileCVService {
     ProfileCVMapper profileCVMapper;
     ProfileCVRepository profileCVRepository;
     CandidateProfileRepository candidateProfileRepository;
+    SkillRepository skillRepository;
     Cloudinary cloudinary;
     IndustryRepository industryRepository;
     SecurityUtils securityUtils;
@@ -87,6 +92,10 @@ public class ProfileCVService {
         String publicId = uploadResult.get("public_id").toString();
         String cvUrl = uploadResult.get("secure_url").toString();
         ProfileCV profileCV = profileCVMapper.toEntity(request);
+        //mapping skills
+        Set<Skill> skills = new HashSet<>(skillRepository.findAllById(request.getSkillIds()));
+        profileCV.setSkills(skills);
+
         String previewUrl;
         log.info(extension);
         if(extension.equals(".pdf")){
@@ -122,6 +131,7 @@ public class ProfileCVService {
     }
     public ProfileCVResponse setIsDefault(String profileCVId){
         String userId = securityUtils.getObject();
+
         ProfileCV profileCV = profileCVRepository.findById(profileCVId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
         if (!profileCV.getCandidateProfile().getUserId().equals(userId)) {
@@ -174,5 +184,12 @@ public class ProfileCVService {
                         "attachment; filename=\"" + fileName + "\"")
                 .contentType(mediaType)
                 .body(new ByteArrayResource(fileBytes));
+    }
+    public List<ProfileCVResponse> getAllMyProfile(){
+        String userId = securityUtils.getObject();
+        return profileCVRepository.findByCandidateProfile_UserId(userId)
+                .stream()
+                .map(profileCVMapper::toProfileCVResponse)
+                .toList();
     }
 }

@@ -16,12 +16,13 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProfileCVResponse {
     String cvId;
-    CandidateProfile candidateProfile;
+    CandidateProfileResponse candidateProfile;
     String name;
     String email;
     String phone;
     IndustryResponse industry;
+    Boolean isDefault;
     String fileName;
     String urlCVPreview;
-    List<Skill> skills;
+    List<SkillResponse> skills;
 }

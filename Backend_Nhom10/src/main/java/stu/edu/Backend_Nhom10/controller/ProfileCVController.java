@@ -15,6 +15,7 @@ import stu.edu.Backend_Nhom10.entity.ProfileCV;
 import stu.edu.Backend_Nhom10.service.ProfileCVService;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/profile-cv")
@@ -49,5 +50,11 @@ public class ProfileCVController {
     public ResponseEntity<Resource> downloadCV(@PathVariable String cvId) throws IOException {
         return profileCVService.downloadCV(cvId);
     }
-
+    @GetMapping("/my-profileCV")
+    public ApiResponse<List<ProfileCVResponse>> getAllMyProfile(){
+        return ApiResponse.<List<ProfileCVResponse>>
+                builder()
+                .result(profileCVService.getAllMyProfile())
+                .build();
+    }
 }
