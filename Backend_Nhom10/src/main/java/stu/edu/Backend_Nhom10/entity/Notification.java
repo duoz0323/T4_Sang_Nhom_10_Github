@@ -19,11 +19,19 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+    @ManyToOne
+    @JoinColumn(name = "company_profile_id")
+    CompanyProfile companyProfile;
+
+    @ManyToOne
+    @JoinColumn(name = "candidate_profile_id")
+    CandidateProfile candidateProfile;
     @Column(nullable = false)
     String title;
     @Column(columnDefinition = "TEXT")
     String description;
     String link;
+
     @Column(nullable = false)
     Boolean isRead=false;
 

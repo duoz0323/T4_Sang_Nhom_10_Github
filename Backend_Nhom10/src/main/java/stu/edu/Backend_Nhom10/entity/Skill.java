@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -27,4 +29,6 @@ public class Skill {
 
     @ManyToMany(mappedBy = "skills")
     Set<JobPosting> jobPostings = new HashSet<>();
+    @ManyToMany(mappedBy = "skills")
+    Set<ProfileCV> profileCVList = new HashSet<>();
 }

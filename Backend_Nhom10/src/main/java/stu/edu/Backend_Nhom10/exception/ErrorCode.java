@@ -50,7 +50,11 @@ public enum ErrorCode {
     //FILE
     FILE_REQUIRED(1030,"File is required",HttpStatus.BAD_REQUEST),
     INVALID_FILE_TYPE(1031,"File is invalid",HttpStatus.BAD_REQUEST),
-    ALREADY_APPLIED(1032,"Already applied this posting",HttpStatus.BAD_REQUEST)
+    ALREADY_APPLIED(1032,"Already applied this posting",HttpStatus.BAD_REQUEST),
+
+    //APPLICATION
+    APPLICATION_NOT_FOUND(1033,"Application not found",HttpStatus.BAD_REQUEST),
+    ALREADY_PROCESSED(1034,"This application has been processed",HttpStatus.BAD_REQUEST)
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

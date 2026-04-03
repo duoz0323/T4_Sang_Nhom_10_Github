@@ -14,6 +14,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Table(
+        name = "job_application",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"candidate_profile_id", "job_posting_id"}
+        )
+)
 public class JobApplication {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,6 +42,8 @@ public class JobApplication {
     String phone;
     String name;
 
+    @Column(name = "cv_public_id")
+    String cvPublicId;
     String fileName;
     String urlCV;
 }

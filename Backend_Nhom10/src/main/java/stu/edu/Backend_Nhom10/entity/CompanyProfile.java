@@ -44,4 +44,7 @@ public class CompanyProfile implements Serializable {
     @OneToMany(mappedBy = "companyProfile",fetch = FetchType.LAZY)
     List<JobPosting> jobpostings;
 
+    @OneToMany(mappedBy = "companyProfile",fetch = FetchType.LAZY)
+    List<Notification> notifications;
+
 }
