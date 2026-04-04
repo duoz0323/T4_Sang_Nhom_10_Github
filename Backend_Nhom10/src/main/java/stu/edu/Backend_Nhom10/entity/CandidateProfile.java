@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,6 +33,12 @@ public class CandidateProfile implements Serializable {
     @Column(unique = true)
     String userId;
     String email;
+
+    @OneToMany(mappedBy = "candidateProfile",fetch = FetchType.LAZY)
+    List<Notification> notifications;
+
+    @OneToMany(mappedBy = "candidateProfile")
+    List<JobApplication> jobApplications;
 
     @CreationTimestamp
     @Column(updatable = false)
