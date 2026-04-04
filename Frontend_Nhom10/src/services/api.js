@@ -239,6 +239,17 @@ export const jobAPI = {
     console.warn('⚠️ Saved jobs feature not implemented in backend');
     return Promise.resolve({ data: { code: 1000, result: false } });
   },
+
+  // Admin APIs
+  // Get pending jobs for approval (admin only)
+  getPendingJobs: () => {
+    return api.get('/posts/admin/pending');
+  },
+
+  // Update job status (admin only) - approve/reject
+  updateJobStatus: (id, status) => {
+    return api.patch(`/posts/admin/${id}/status`, {}, { params: { status } });
+  },
 };
 
 // Notification API
