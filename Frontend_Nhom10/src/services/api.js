@@ -85,13 +85,77 @@ export const profileAPI = {
   updateCompanyProfile: (profileId, data) => {
     return api.put(`/company_profile/${profileId}`, data);
   },
+
+  // Change Password (Candidate)
+  changeCandidatePassword: (profileId, passwordData) => {
+    return api.put(`/candidate_profile/${profileId}/change-password`, passwordData);
+  },
+
+  // Change Password (Company)
+  changeCompanyPassword: (profileId, passwordData) => {
+    return api.put(`/company_profile/${profileId}/change-password`, passwordData);
+  },
+
+  // Upload Avatar (Candidate)
+  uploadCandidateAvatar: (profileId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.put(`/candidate_profile/${profileId}/avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Upload Avatar (Company)
+  uploadCompanyAvatar: (profileId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.put(`/company_profile/${profileId}/avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Upload CV (Candidate)
+  uploadCV: (profileId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.put(`/candidate_profile/${profileId}/cv`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Delete Account (Candidate)
+  deleteCandidateAccount: (profileId) => {
+    return api.delete(`/candidate_profile/${profileId}`);
+  },
+
+  // Delete Account (Company)
+  deleteCompanyAccount: (profileId) => {
+    return api.delete(`/company_profile/${profileId}`);
+  },
 };
 
 // Job API
 export const jobAPI = {
-  // Get all active jobs (public)
-  getAllActiveJobs: () => {
-    return api.get('/posts/public');
+  // Get all active jobs (public) with filters
+  getAllActiveJobs: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.keyword) queryParams.append('keyword', params.keyword);
+    if (params.locationId) queryParams.append('locationId', params.locationId);
+    if (params.industryId) queryParams.append('industryId', params.industryId);
+    if (params.minSalary) queryParams.append('minSalary', params.minSalary);
+    if (params.maxSalary) queryParams.append('maxSalary', params.maxSalary);
+    if (params.workingFormat) queryParams.append('workingFormat', params.workingFormat);
+    if (params.page !== undefined) queryParams.append('page', params.page);
+    if (params.size !== undefined) queryParams.append('size', params.size);
+    
+    const queryString = queryParams.toString();
+    return api.get(`/posts/public${queryString ? `?${queryString}` : ''}`);
   },
 
   // Get job by ID
@@ -122,6 +186,58 @@ export const jobAPI = {
   // Reopen job
   reopenJob: (id) => {
     return api.put(`/posts/${id}/reopen`);
+  },
+
+  // Apply to job (candidate only)
+  applyJob: (jobPostingId, applicationData, cvFile) => {
+    const formData = new FormData();
+    
+    // Part 1: data (JSON as Blob)
+    const data = {
+      jobPostingId,  // ✅ Đúng field name theo Backend
+      name: applicationData.name ||  applicationData.fullName,
+      email: applicationData.email,
+      phone: applicationData.phone
+    };
+    formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    
+    // Part 2: file (binary)
+    if (cvFile) {
+      formData.append('file', cvFile);
+    }
+    
+    return api.post('/applications', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
+  // Get my applications (candidate only)
+  getMyApplications: () => {
+    return api.get('/applications/me');  // ✅ Đúng endpoint theo Backend Swagger
+  },
+
+  // ⚠️ SAVED JOBS - Backend chưa có endpoints này
+  // TODO: Backend cần implement saved-jobs feature
+  // Tạm thời disable để không gây lỗi 404
+  
+  saveJob: (postId) => {
+    console.warn('⚠️ Saved jobs feature not implemented in backend');
+    return Promise.resolve({ data: { code: 1000, result: null } });
+  },
+
+  unsaveJob: (postId) => {
+    console.warn('⚠️ Saved jobs feature not implemented in backend');
+    return Promise.resolve({ data: { code: 1000, result: null } });
+  },
+
+  getSavedJobs: () => {
+    console.warn('⚠️ Saved jobs feature not implemented in backend');
+    return Promise.resolve({ data: { code: 1000, result: [] } });
+  },
+
+  checkIfSaved: (postId) => {
+    console.warn('⚠️ Saved jobs feature not implemented in backend');
+    return Promise.resolve({ data: { code: 1000, result: false } });
   },
 };
 

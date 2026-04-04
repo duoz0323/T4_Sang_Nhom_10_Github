@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileAPI } from '../../../services/api';
+import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import ProfileSidebar from '../../../components/layout/ProfileSidebar';
 
 function SettingsPage() {
+  const { user, userRole } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
   // State management
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -21,6 +28,25 @@ function SettingsPage() {
 
   const [profileVisibility, setProfileVisibility] = useState('hidden');
 
+  useEffect(() => {
+    fetchProfile();
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      await ensureAuthenticated(); // Ensure token before API call
+      const response = userRole === 'CANDIDATE' 
+        ? await profileAPI.getMyCandidateProfile()
+        : await profileAPI.getMyCompanyProfile();
+        
+      if (response?.data?.result) {
+        setProfile(response.data.result);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching profile:', err);
+    }
+  };
+
   // Event handlers
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -35,8 +61,9 @@ function SettingsPage() {
     });
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       toast.error('Vui lòng điền đầy đủ thông tin');
       return;
@@ -45,12 +72,46 @@ function SettingsPage() {
       toast.error('Mật khẩu xác nhận không khớp');
       return;
     }
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Mật khẩu phải có ít nhất 8 ký tự');
+    if (passwordData.newPassword.length < 6) {
+      toast.error('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
-    toast.success('Đã cập nhật mật khẩu');
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+
+    if (!profile) {
+      toast.error('Không tìm thấy thông tin tài khoản');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      toast.info('Đang cập nhật mật khẩu...');
+
+      const changePasswordData = {
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      };
+
+      const profileId = userRole === 'CANDIDATE' 
+        ? profile.candidateProfileId 
+        : profile.companyProfileId;
+
+      const response = userRole === 'CANDIDATE'
+        ? await profileAPI.changeCandidatePassword(profileId, changePasswordData)
+        : await profileAPI.changeCompanyPassword(profileId, changePasswordData);
+
+      if (response?.data?.code === 1000) {
+        toast.success('Đã cập nhật mật khẩu thành công');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        toast.error(response?.data?.message || 'Có lỗi xảy ra');
+      }
+    } catch (err) {
+      console.error('❌ Error changing password:', err);
+      const errorMessage = err.response?.data?.message || 'Không thể thay đổi mật khẩu';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleShowProfile = () => {

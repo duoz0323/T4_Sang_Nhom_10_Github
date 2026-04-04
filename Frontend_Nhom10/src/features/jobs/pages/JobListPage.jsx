@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { jobAPI } from '../../../services/api';
+import { jobAPI, locationAPI, industryAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 
@@ -80,54 +81,120 @@ const JobListPage = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [savedJobs, setSavedJobs] = useState(new Set()); // Track saved jobs
+  const [savedJobs, setSavedJobs] = useState(new Set());
+  const [locations, setLocations] = useState([]);
+  const [industries, setIndustries] = useState([]);
+  const [filters, setFilters] = useState({
+    keyword: '',
+    locationId: '',
+    industryId: '',
+    minSalary: '',
+    maxSalary: '',
+    workingFormat: ''
+  });
   const jobsPerPage = 5;
 
   useEffect(() => {
-    console.log('🔵 JobListPage mounted - Initial jobs:', jobs);
+    console.log('🔵 JobListPage mounted');
+    fetchLocations();
+    fetchIndustries();
     fetchJobs();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSavedJobs();
+    }
   }, [isAuthenticated]);
+
+  const fetchLocations = async () => {
+    try {
+      await ensureAuthenticated(); // Ensure token
+      const response = await locationAPI.getAll();
+      if (response?.data?.code === 1000 && response?.data?.result) {
+        setLocations(response.data.result);
+        console.log('✅ Loaded locations from API:', response.data.result.length);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching locations:', err);
+    }
+  };
+
+  const fetchIndustries = async () => {
+    try {
+      await ensureAuthenticated(); // Ensure token
+      const response = await industryAPI.getAll();
+      if (response?.data?.code === 1000 && response?.data?.result) {
+        setIndustries(response.data.result);
+        console.log('✅ Loaded industries from API:', response.data.result.length);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching industries:', err);
+    }
+  };
+
+  const fetchSavedJobs = async () => {
+    try {
+      const response = await jobAPI.getSavedJobs();
+      if (response?.data?.result) {
+        const savedIds = new Set(response.data.result.map(job => job.jobPostingId));
+        setSavedJobs(savedIds);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching saved jobs:', err);
+    }
+  };
 
   const fetchJobs = async () => {
     setLoading(true);
-    console.log('🔵 Fetching jobs - isAuthenticated:', isAuthenticated);
+    console.log('🔵 Fetching jobs with filters:', filters);
     
-    // Set mock data as fallback
-    let finalJobs = MOCK_JOBS_LIST;
-    
-    // Try API if authenticated  
-    if (isAuthenticated) {
-      try {
-        console.log('🔄 Attempting to fetch from API...');
-        const response = await jobAPI.getAllActiveJobs();
-        console.log('📊 API response:', response.data);
+    try {
+      await ensureAuthenticated(); // Ensure token
+      console.log('🔄 Attempting to fetch from API...');
+      const response = await jobAPI.getAllActiveJobs(filters);
+      console.log('📊 API response:', response.data);
+      
+      if (response?.data?.code === 1000 && response?.data?.result) {
+        const jobsFromAPI = response.data.result;
+        console.log('✅ Got', jobsFromAPI.length, 'jobs from API');
         
-        // Check for auth errors
-        if (response?.data?.code === 1006) {
-          console.warn('⚠️ API returned Unauthenticated (1006)');
-        } else if (response?.data?.result && response.data.result.length > 0) {
-          console.log('✅ Got', response.data.result.length, 'jobs from API');
-          finalJobs = response.data.result.map(job => ({
-            jobPostingId: job.jobPostingId,
-            title: job.title,
-            companyName: job.companyProfile?.companyName || 'Company',
-            salaryMin: job.minSalary || 0,
-            salaryMax: job.maxSalary || 0,
-            location: job.locations?.map(l => l.city).join(', ') || 'Chưa xác định',
-            type: 'Full-time',
-            tags: job.industries?.flatMap(i => i.skills?.map(s => s.skillName) || []) || [],
-            logo: job.companyProfile?.logo || 'https://via.placeholder.com/64'
-          }));
-        }
-      } catch (err) {
-        console.error('❌ API error:', err.response?.data || err.message);
+        const mappedJobs = jobsFromAPI.map(job => ({
+          jobPostingId: job.jobPostingId,
+          title: job.title,
+          companyName: job.companyProfile?.companyName || 'Company',
+          salaryMin: job.salaryRequire || 0,
+          salaryMax: job.salaryRequire ? job.salaryRequire * 1.5 : 0, // Estimate max as 1.5x
+          location: job.locations?.map(l => l.city).join(', ') || 'Chưa xác định',
+          type: 'Full-time', // Default as backend doesn't have workingFormat in response
+          tags: job.skills?.slice(0, 3).map(s => s.skillName) || [],
+          logo: job.companyProfile?.avatar || 'https://via.placeholder.com/64'
+        }));
+        
+        setJobs(mappedJobs);
+      } else {
+        console.warn('⚠️ No jobs returned or invalid response');
+        setJobs([]);
       }
+    } catch (err) {
+      console.error('❌ API error:', err.response?.data || err.message);
+      console.error('❌ Full error:', err);
+      setJobs([]); // Set empty array instead of mock data
     }
     
-    // Always set jobs (either from API or mock)
-    console.log('📦 Setting jobs:', finalJobs.length);
-    setJobs(finalJobs);
     setLoading(false);
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const applyFilters = () => {
+    setCurrentPage(1);
+    fetchJobs();
   };
 
   // Pagination logic
@@ -141,16 +208,32 @@ const JobListPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const toggleSaveJob = (jobId) => {
-    setSavedJobs(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(jobId)) {
-        newSet.delete(jobId);
+  const toggleSaveJob = async (jobId) => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để lưu công việc');
+      return;
+    }
+
+    try {
+      if (savedJobs.has(jobId)) {
+        await jobAPI.unsaveJob(jobId);
+        setSavedJobs(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(jobId);
+          return newSet;
+        });
       } else {
-        newSet.add(jobId);
+        await jobAPI.saveJob(jobId);
+        setSavedJobs(prev => {
+          const newSet = new Set(prev);
+          newSet.add(jobId);
+          return newSet;
+        });
       }
-      return newSet;
-    });
+    } catch (err) {
+      console.error('❌ Error toggling save job:', err);
+      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+    }
   };
 
   return (
@@ -179,7 +262,14 @@ const JobListPage = () => {
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Tìm kiếm</h3>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-                  <input className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" placeholder="Từ khóa..." type="text" />
+                  <input 
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" 
+                    placeholder="Từ khóa..." 
+                    type="text"
+                    value={filters.keyword}
+                    onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
+                  />
                 </div>
               </div>
 
@@ -189,19 +279,39 @@ const JobListPage = () => {
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-5">Địa điểm</h3>
                   <div className="space-y-4">
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input defaultChecked className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" type="checkbox" />
+                      <input 
+                        className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" 
+                        type="checkbox"
+                        checked={filters.locationId === 'hcm'}
+                        onChange={(e) => handleFilterChange('locationId', e.target.checked ? 'hcm' : '')}
+                      />
                       <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">TP. Hồ Chí Minh</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" type="checkbox" />
+                      <input 
+                        className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" 
+                        type="checkbox"
+                        checked={filters.locationId === 'hanoi'}
+                        onChange={(e) => handleFilterChange('locationId', e.target.checked ? 'hanoi' : '')}
+                      />
                       <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">Hà Nội</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" type="checkbox" />
+                      <input 
+                        className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" 
+                        type="checkbox"
+                        checked={filters.locationId === 'danang'}
+                        onChange={(e) => handleFilterChange('locationId', e.target.checked ? 'danang' : '')}
+                      />
                       <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">Đà Nẵng</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" type="checkbox" />
+                      <input 
+                        className="w-5 h-5 rounded border-slate-300 text-secondary focus:ring-secondary/20" 
+                        type="checkbox"
+                        checked={filters.workingFormat === 'Remote'}
+                        onChange={(e) => handleFilterChange('workingFormat', e.target.checked ? 'Remote' : '')}
+                      />
                       <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">Remote</span>
                     </label>
                   </div>
@@ -211,23 +321,54 @@ const JobListPage = () => {
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-5">Mức lương</h3>
                   <div className="space-y-4">
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input className="w-5 h-5 border-slate-300 text-secondary focus:ring-secondary/20" name="salary" type="radio" />
-                      <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">$3,000 - $6,000</span>
+                      <input 
+                        className="w-5 h-5 border-slate-300 text-secondary focus:ring-secondary/20" 
+                        name="salary" 
+                        type="radio"
+                        checked={filters.minSalary === '10000000' && filters.maxSalary === '20000000'}
+                        onChange={() => {
+                          handleFilterChange('minSalary', '10000000');
+                          handleFilterChange('maxSalary', '20000000');
+                        }}
+                      />
+                      <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">10tr - 20tr</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input className="w-5 h-5 border-slate-300 text-secondary focus:ring-secondary/20" name="salary" type="radio" />
-                      <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">$6,000 - $10,000</span>
+                      <input 
+                        className="w-5 h-5 border-slate-300 text-secondary focus:ring-secondary/20" 
+                        name="salary" 
+                        type="radio"
+                        checked={filters.minSalary === '20000000' && filters.maxSalary === '40000000'}
+                        onChange={() => {
+                          handleFilterChange('minSalary', '20000000');
+                          handleFilterChange('maxSalary', '40000000');
+                        }}
+                      />
+                      <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">20tr - 40tr</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <input defaultChecked className="w-5 h-5 border-slate-300 text-secondary focus:ring-secondary/20" name="salary" type="radio" />
-                      <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">Trên $10,000</span>
+                      <input 
+                        className="w-5 h-5 border-slate-300 text-secondary focus:ring-secondary/20" 
+                        name="salary" 
+                        type="radio"
+                        checked={filters.minSalary === '40000000'}
+                        onChange={() => {
+                          handleFilterChange('minSalary', '40000000');
+                          handleFilterChange('maxSalary', '');
+                        }}
+                      />
+                      <span className="text-slate-600 group-hover:text-primary transition-colors font-medium">Trên 40tr</span>
                     </label>
                   </div>
                 </section>
               </div>
 
-              <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-all shadow-sm">
-                Lọc kết quả
+              <button 
+                className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-all shadow-sm"
+                onClick={applyFilters}
+                disabled={loading}
+              >
+                {loading ? 'Đang tải...' : 'Lọc kết quả'}
               </button>
             </div>
           </aside>

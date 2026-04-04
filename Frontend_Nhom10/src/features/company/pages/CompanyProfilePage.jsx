@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { profileAPI } from '../../../services/api';
+import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import ProfileSidebar from '../../../components/layout/ProfileSidebar';
@@ -10,7 +11,8 @@ function CompanyProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({ 
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
     companyName: '', 
     industry: '', 
     email: '', 
@@ -30,6 +32,7 @@ function CompanyProfilePage() {
   const fetchCompanyProfile = async () => {
     try {
       setLoading(true);
+      await ensureAuthenticated(); // Ensure token before API call
       console.log('🔄 Fetching company profile...');
       const response = await profileAPI.getMyCompanyProfile();
       console.log('📋 Company profile response:', response);
@@ -67,18 +70,36 @@ function CompanyProfilePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { 
-        toast.error('Logo không được vượt quá 5MB'); 
-        return;
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) { 
+      toast.error('Logo không được vượt quá 5MB'); 
+      return;
+    }
+    if (!file.type.startsWith('image/')) { 
+      toast.error('Vui lòng chọn file ảnh'); 
+      return; 
+    }
+
+    try {
+      setUploading(true);
+      toast.info('Đang tải logo lên...');
+      
+      const response = await profileAPI.uploadCompanyAvatar(profile.companyProfileId, file);
+      
+      if (response?.data?.code === 1000) {
+        toast.success('Đã cập nhật logo công ty thành công');
+        await fetchCompanyProfile(); // Refresh profile
+      } else {
+        toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
-      if (!file.type.startsWith('image/')) { 
-        toast.error('Vui lòng chọn file ảnh'); 
-        return; 
-      }
-      toast.success('Đã tải logo công ty');
+    } catch (err) {
+      console.error('❌ Error uploading logo:', err);
+      toast.error('Không thể tải logo lên. Vui lòng thử lại.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -97,10 +118,48 @@ function CompanyProfilePage() {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    toast.success('Đã lưu thay đổi thành công!');
-    setProfile(prev => ({ ...prev, ...formData }));
+    
+    if (!profile?.companyProfileId) {
+      toast.error('Không tìm thấy thông tin công ty');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      toast.info('Đang lưu thay đổi...');
+      
+      const updateData = {
+        companyName: formData.companyName,
+        address: formData.address,
+        description: formData.description,
+        website: formData.website,
+        phone: formData.phone,
+        industry: formData.industry,
+        foundedYear: formData.foundedYear,
+        companySize: formData.companySize,
+        taxCode: formData.taxCode
+      };
+
+      const response = await profileAPI.updateCompanyProfile(
+        profile.companyProfileId,
+        updateData
+      );
+      
+      if (response?.data?.code === 1000) {
+        toast.success('Đã lưu thay đổi thành công!');
+        await fetchCompanyProfile(); // Refresh profile
+      } else {
+        toast.error(response?.data?.message || 'Có lỗi xảy ra');
+      }
+    } catch (err) {
+      console.error('❌ Error updating company profile:', err);
+      const errorMessage = err.response?.data?.message || 'Không thể lưu thay đổi';
+      toast.error(errorMessage);
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {

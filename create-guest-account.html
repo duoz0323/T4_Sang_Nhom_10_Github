@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Guest Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .info-box strong {
+            color: #667eea;
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+            display: block;
+        }
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+            display: block;
+        }
+        .loading {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+            display: block;
+        }
+        .step {
+            background: #f9fafb;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #9ca3af;
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Tạo Guest Account</h1>
+        <p class="subtitle">Tạo tài khoản guest để Frontend tự động login</p>
+        
+        <div class="info-box">
+            <strong>⚡ Thông Tin Guest Account:</strong><br>
+            📧 Email: <code>guest@jobmatch.com</code><br>
+            🔑 Password: <code>Guest123!@#</code><br>
+            👤 Full Name: <code>Guest User</code><br>
+            🎂 Birthday: <code>1990-01-01</code>
+        </div>
+
+        <div class="info-box" style="background: #fff7ed; border-left-color: #f59e0b;">
+            <strong style="color: #f59e0b;">⚠️ LƯU Ý:</strong><br>
+            Chỉ cần tạo 1 LẦN DUY NHẤT! Sau khi tạo xong, Frontend sẽ tự động dùng account này mãi mãi.
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>Nhấn nút bên dưới để tạo guest account</strong>
+        </div>
+
+        <button onclick="createGuestAccount()" id="createBtn">
+            🚀 Tạo Guest Account Ngay
+        </button>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>Sau khi tạo xong, test login</strong>
+        </div>
+
+        <button onclick="testLogin()" id="testBtn" disabled>
+            🔑 Test Guest Login
+        </button>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>Reload trang Frontend để thấy dữ liệu thật</strong>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://t4-sang-nhom-10-backend.onrender.com';
+        let guestCreated = false;
+
+        function log(message, type = 'loading') {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.className = type;
+            resultDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('result').style.display = 'none';
+        }
+
+        async function createGuestAccount() {
+            clearLog();
+            document.getElementById('result').style.display = 'block';
+            const createBtn = document.getElementById('createBtn');
+            createBtn.disabled = true;
+            createBtn.textContent = '⏳ Đang tạo account...';
+
+            log('🚀 Bắt đầu tạo Guest Account...', 'loading');
+            log('📡 Backend: ' + API_URL, 'loading');
+            log('📧 Email: guest@jobmatch.com', 'loading');
+            
+            try {
+                log('🔄 Gọi POST /candidate_profile/register...', 'loading');
+                
+                const response = await fetch(`${API_URL}/candidate_profile/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'guest@jobmatch.com',
+                        password: 'Guest123!@#',
+                        fullName: 'Guest User',
+                        birthday: '1990-01-01'
+                    })
+                });
+
+                const data = await response.json();
+                log(`\n📊 Response Status: ${response.status}`, 'loading');
+                log(`📊 Response Body:\n${JSON.stringify(data, null, 2)}`, 'loading');
+
+                if (data.code === 1000) {
+                    log('\n🎉🎉🎉 THÀNH CÔNG! 🎉🎉🎉', 'success');
+                    log('✅ Guest account đã được tạo!', 'success');
+                    log('✅ Email: guest@jobmatch.com', 'success');
+                    log('✅ Password: Guest123!@#', 'success');
+                    log('\n👉 BÂY GIỜ NHẤN NÚT "Test Guest Login" để kiểm tra!', 'success');
+                    
+                    guestCreated = true;
+                    document.getElementById('testBtn').disabled = false;
+                    createBtn.textContent = '✅ Guest Account Đã Tạo';
+                    createBtn.style.background = '#10b981';
+                } else if (data.code === 1002) {
+                    // Email đã tồn tại - cũng OK!
+                    log('\n✅ Guest account ĐÃ TỒN TẠI từ trước!', 'success');
+                    log('✅ Không cần tạo lại', 'success');
+                    log('\n👉 NHẤN NÚT "Test Guest Login" để kiểm tra!', 'success');
+                    
+                    guestCreated = true;
+                    document.getElementById('testBtn').disabled = false;
+                    createBtn.textContent = '✅ Guest Account Đã Có Sẵn';
+                    createBtn.style.background = '#10b981';
+                } else {
+                    log('\n❌ LỖI KHI TẠO ACCOUNT!', 'error');
+                    log(`Code: ${data.code}`, 'error');
+                    log(`Message: ${data.message}`, 'error');
+                    createBtn.disabled = false;
+                    createBtn.textContent = '🚀 Thử Lại';
+                }
+            } catch (error) {
+                log(`\n❌ NETWORK ERROR: ${error.message}`, 'error');
+                log('Backend có thể đang offline hoặc CORS issue', 'error');
+                createBtn.disabled = false;
+                createBtn.textContent = '🚀 Thử Lại';
+            }
+        }
+
+        async function testLogin() {
+            log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'loading');
+            log('🔑 Test Guest Login...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/candidate_profile/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'guest@jobmatch.com',
+                        password: 'Guest123!@#'
+                    })
+                });
+
+                const data = await response.json();
+                log(`📊 Response Status: ${response.status}`, 'loading');
+
+                if (data.code === 1000 && data.result?.access_token) {
+                    log('\n🎉 LOGIN THÀNH CÔNG! 🎉', 'success');
+                    log('✅ Access Token: ' + data.result.access_token.substring(0, 50) + '...', 'success');
+                    log('✅ Expires in: ' + data.result.expires_in + ' seconds', 'success');
+                    log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'success');
+                    log('🚀 HOÀN TẤT! BÂY GIỜ:', 'success');
+                    log('1️⃣ Mở Frontend: http://localhost:5173', 'success');
+                    log('2️⃣ Mở Console (F12)', 'success');
+                    log('3️⃣ Phải thấy: "✅ Guest login successful"', 'success');
+                    log('4️⃣ Jobs sẽ hiển thị từ DATABASE BACKEND!', 'success');
+                    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'success');
+                } else {
+                    log('\n❌ Login thất bại!', 'error');
+                    log(`Code: ${data.code}`, 'error');
+                    log(`Message: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`\n❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

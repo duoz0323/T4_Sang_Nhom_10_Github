@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Duyệt Jobs - Admin Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 42px; margin-bottom: 10px; }
+        .header p { opacity: 0.95; font-size: 18px; margin-top: 10px; }
+        .content { padding: 40px; }
+        .problem-box {
+            background: #fee2e2;
+            border-left: 5px solid #dc2626;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .problem-box h3 { color: #991b1b; margin-bottom: 15px; }
+        .problem-box p { color: #7f1d1d; line-height: 1.8; }
+        .solution-box {
+            background: #d1fae5;
+            border-left: 5px solid #10b981;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .solution-box h3 { color: #065f46; margin-bottom: 15px; }
+        .solution-box p { color: #064e3b; line-height: 1.8; }
+        .jobs-list {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .job-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 5px solid #f59e0b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .job-info { flex: 1; }
+        .job-info .id { font-family: monospace; color: #6b7280; font-size: 12px; }
+        .job-info .title { font-weight: bold; color: #1f2937; margin: 5px 0; }
+        .job-info .status { 
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-active { background: #d1fae5; color: #065f46; }
+        button {
+            background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6);
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        button.small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        #result {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 20px;
+            display: none;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Admin Tool - Duyệt Jobs</h1>
+            <p>Chuyển jobs từ PENDING → ACTIVE</p>
+        </div>
+
+        <div class="content">
+            <div class="problem-box">
+                <h3>❌ VẤN ĐỀ PHÁT HIỆN:</h3>
+                <p><strong>Tất cả 6 jobs trong database có status = "PENDING"</strong></p>
+                <p>→ API <code>/posts/public</code> chỉ trả về jobs có status = "ACTIVE"</p>
+                <p>→ Frontend nhận 0 jobs từ Backend!</p>
+            </div>
+
+            <div class="solution-box">
+                <h3>✅ GIẢI PHÁP:</h3>
+                <p>Dùng Admin API để duyệt jobs (KHÔNG SỬA CODE BACKEND)</p>
+                <p><code>PATCH /posts/admin/{id}/status?status=ACTIVE</code></p>
+            </div>
+
+            <h3 style="color: #1f2937; margin: 30px 0 15px 0;">📋 Danh Sách Jobs Cần Duyệt:</h3>
+            
+            <div class="jobs-list" id="jobsList">
+                <div class="job-item">
+                    <div class="job-info">
+                        <div class="id">ID: 2a573a5b-e541-4d27-8f1a-183d636a2397</div>
+                        <div class="title">huu khang</div>
+                        <span class="status status-pending">PENDING</span>
+                    </div>
+                    <button class="small" onclick="approveJob('2a573a5b-e541-4d27-8f1a-183d636a2397', this)">✅ Duyệt</button>
+                </div>
+
+                <div class="job-item">
+                    <div class="job-info">
+                        <div class="id">ID: 54da72b0-3b52-4647-8c63-e026fe347769</div>
+                        <div class="title">huu khang</div>
+                        <span class="status status-pending">PENDING</span>
+                    </div>
+                    <button class="small" onclick="approveJob('54da72b0-3b52-4647-8c63-e026fe347769', this)">✅ Duyệt</button>
+                </div>
+
+                <div class="job-item">
+                    <div class="job-info">
+                        <div class="id">ID: 5f096b65-6ea7-4d1b-a03d-10cb418e5d6e</div>
+                        <div class="title">huu khang</div>
+                        <span class="status status-pending">PENDING</span>
+                    </div>
+                    <button class="small" onclick="approveJob('5f096b65-6ea7-4d1b-a03d-10cb418e5d6e', this)">✅ Duyệt</button>
+                </div>
+
+                <div class="job-item">
+                    <div class="job-info">
+                        <div class="id">ID: 9c941cd1-28ad-4987-b8d3-932ab9044602</div>
+                        <div class="title">huu khang</div>
+                        <span class="status status-pending">PENDING</span>
+                    </div>
+                    <button class="small" onclick="approveJob('9c941cd1-28ad-4987-b8d3-932ab9044602', this)">✅ Duyệt</button>
+                </div>
+
+                <div class="job-item">
+                    <div class="job-info">
+                        <div class="id">ID: 9f93f279-6759-4e90-a239-a4b767a5c426</div>
+                        <div class="title">huu khang</div>
+                        <span class="status status-pending">PENDING</span>
+                    </div>
+                    <button class="small" onclick="approveJob('9f93f279-6759-4e90-a239-a4b767a5c426', this)">✅ Duyệt</button>
+                </div>
+
+                <div class="job-item">
+                    <div class="job-info">
+                        <div class="id">ID: f830a77d-5c56-4332-b077-62f468a40e6c</div>
+                        <div class="title">huu khang</div>
+                        <span class="status status-pending">PENDING</span>
+                    </div>
+                    <button class="small" onclick="approveJob('f830a77d-5c56-4332-b077-62f468a40e6c', this)">✅ Duyệt</button>
+                </div>
+            </div>
+
+            <button onclick="approveAllJobs()" style="width: 100%; margin-top: 20px;">
+                🚀 DUYỆT TẤT CẢ 6 JOBS
+            </button>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://t4-sang-nhom-10-backend.onrender.com';
+        let token = localStorage.getItem('accessToken');
+
+        function log(msg, type = 'info') {
+            const div = document.getElementById('result');
+            div.style.display = 'block';
+            const time = new Date().toLocaleTimeString();
+            const className = type;
+            div.innerHTML += `<span class="${className}">[${time}] ${msg}</span>\n`;
+            div.scrollTop = div.scrollHeight;
+        }
+
+        async function getToken() {
+            if (!token) {
+                log('🔐 Getting guest token...', 'info');
+                try {
+                    const response = await fetch(`${API_URL}/candidate_profile/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: 'guest@jobmatch.com',
+                            password: 'Guest123!@#'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.code === 1000) {
+                        token = data.result.access_token;
+                        localStorage.setItem('accessToken', token);
+                        log('✅ Got token!', 'success');
+                    }
+                } catch (err) {
+                    log('❌ Cannot get token: ' + err.message, 'error');
+                }
+            }
+            return token;
+        }
+
+        async function approveJob(jobId, button) {
+            const token = await getToken();
+            if (!token) return;
+
+            log(`\n📤 Approving job: ${jobId}`, 'info');
+            button.disabled = true;
+            button.textContent = '⏳ Đang duyệt...';
+
+            try {
+                const response = await fetch(`${API_URL}/posts/admin/${jobId}/status?status=ACTIVE`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                log(`📊 Response: ${JSON.stringify(data)}`, 'info');
+
+                if (data.code === 1000) {
+                    log(`✅ Job ${jobId} đã được DUYỆT!`, 'success');
+                    button.textContent = '✅ Đã duyệt';
+                    button.style.background = '#10b981';
+                    
+                    // Update status badge
+                    const statusBadge = button.parentElement.querySelector('.status');
+                    statusBadge.textContent = 'ACTIVE';
+                    statusBadge.className = 'status status-active';
+                } else {
+                    log(`❌ Lỗi: Code ${data.code}, Message: ${data.message}`, 'error');
+                    button.disabled = false;
+                    button.textContent = '❌ Thất bại';
+                }
+            } catch (err) {
+                log(`❌ Network error: ${err.message}`, 'error');
+                button.disabled = false;
+                button.textContent = '🔄 Thử lại';
+            }
+        }
+
+        async function approveAllJobs() {
+            document.getElementById('result').innerHTML = '';
+            log('🚀 DUYỆT TẤT CẢ JOBS...', 'info');
+            log('━'.repeat(80), 'info');
+
+            const jobIds = [
+                '2a573a5b-e541-4d27-8f1a-183d636a2397',
+                '54da72b0-3b52-4647-8c63-e026fe347769',
+                '5f096b65-6ea7-4d1b-a03d-10cb418e5d6e',
+                '9c941cd1-28ad-4987-b8d3-932ab9044602',
+                '9f93f279-6759-4e90-a239-a4b767a5c426',
+                'f830a77d-5c56-4332-b077-62f468a40e6c'
+            ];
+
+            for (let i = 0; i < jobIds.length; i++) {
+                const button = document.querySelectorAll('.job-item button')[i];
+                await approveJob(jobIds[i], button);
+                await new Promise(r => setTimeout(r, 500)); // Wait 500ms between requests
+            }
+
+            log('\n' + '━'.repeat(80), 'success');
+            log('🎉 HOÀN TẤT! Đã duyệt tất cả jobs!', 'success');
+            log('\n👉 BÂY GIỜ MỞ FRONTEND: http://localhost:5173', 'success');
+            log('👉 Reload trang và bạn sẽ thấy 6 jobs!', 'success');
+        }
+    </script>
+</body>
+</html>

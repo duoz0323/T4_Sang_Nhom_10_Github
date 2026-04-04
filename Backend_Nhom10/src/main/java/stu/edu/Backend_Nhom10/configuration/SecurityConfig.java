@@ -23,16 +23,6 @@ public class SecurityConfig {
             "/candidate_profile/login",
     };
 
-    private final String[] PUBLIC_GET_ENDPOINTS = {
-            "/posts/public",
-            "/posts/*",
-            "/locations",
-            "/locations/**",
-            "/skills",
-            "/skills/**",
-            "/industries",
-            "/industries/**",
-    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -44,8 +34,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
-                .requestMatchers("/").permitAll()
-                .anyRequest().authenticated());
+henticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(
                 jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter()))

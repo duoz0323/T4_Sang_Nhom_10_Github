@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Token - JobMatch</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            border-bottom: 3px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .output {
+            background: #263238;
+            color: #aed581;
+            padding: 20px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 20px 0;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        .status.error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        .status.info {
+            background: #bbdefb;
+            color: #1565c0;
+        }
+        .token-display {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 JobMatch API Token Test</h1>
+        
+        <div id="status" class="status info">
+            Chưa kết nối. Click "Login as Guest" để bắt đầu.
+        </div>
+
+        <div>
+            <button onclick="loginAsGuest()">1. Login as Guest</button>
+            <button onclick="testLocations()" id="btnLocations" disabled>2. Test /locations</button>
+            <button onclick="testIndustries()" id="btnIndustries" disabled>3. Test /industries</button>
+            <button onclick="testJobs()" id="btnJobs" disabled>4. Test /posts/public</button>
+            <button onclick="clearOutput()">Clear Log</button>
+        </div>
+
+        <div id="tokenDisplay"></div>
+        
+        <div class="output" id="output">Waiting for action...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://t4-sang-nhom-10-backend.onrender.com';
+        let accessToken = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function setStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function displayToken(token) {
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            if (token) {
+                const decoded = parseJwt(token);
+                tokenDisplay.innerHTML = `
+                    <strong>🔑 Access Token:</strong><br>
+                    ${token.substring(0, 50)}...<br><br>
+                    <strong>📋 Token Info:</strong><br>
+                    User: ${decoded.preferred_username || decoded.email}<br>
+                    Role: ${decoded.realm_access?.roles?.join(', ') || 'N/A'}<br>
+                    Expires: ${new Date(decoded.exp * 1000).toLocaleString()}
+                `;
+            } else {
+                tokenDisplay.innerHTML = '';
+            }
+        }
+
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function enableButtons() {
+            document.getElementById('btnLocations').disabled = false;
+            document.getElementById('btnIndustries').disabled = false;
+            document.getElementById('btnJobs').disabled = false;
+        }
+
+        async function loginAsGuest() {
+            log('🔐 Đang login với guest account...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/candidate_profile/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'guest@jobmatch.com',
+                        password: 'Guest123!@#'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 1000) {
+                    accessToken = data.result.access_token;
+                    log('✅ Login thành công!', 'success');
+                    log(`Token type: ${data.result.token_type}`, 'info');
+                    log(`Expires in: ${data.result.expires_in} seconds`, 'info');
+                    
+                    displayToken(accessToken);
+                    setStatus('✅ Đã login thành công! Token đã sẵn sàng.', 'success');
+                    enableButtons();
+                    
+                    // Save to localStorage (giống frontend)
+                    localStorage.setItem('accessToken', accessToken);
+                    log('💾 Token đã được lưu vào localStorage', 'info');
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                log(`❌ Lỗi login: ${error.message}`, 'error');
+                setStatus('❌ Login thất bại!', 'error');
+            }
+        }
+
+        async function testAPI(endpoint, name) {
+            if (!accessToken) {
+                log('❌ Chưa có token! Hãy login trước.', 'error');
+                return;
+            }
+
+            log(`\n🔄 Testing ${name}...`, 'info');
+            log(`Endpoint: GET ${endpoint}`, 'info');
+            log(`Authorization: Bearer ${accessToken.substring(0, 30)}...`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.code === 1000) {
+                    log(`✅ ${name} - SUCCESS!`, 'success');
+                    log(`Code: ${data.code}`, 'success');
+                    log(`Result count: ${Array.isArray(data.result) ? data.result.length : 1}`, 'success');
+                    
+                    if (Array.isArray(data.result) && data.result.length > 0) {
+                        log(`\n📋 Sample data:`, 'info');
+                        log(JSON.stringify(data.result[0], null, 2), 'info');
+                    } else if (Array.isArray(data.result) && data.result.length === 0) {
+                        log('⚠️ Empty array - no data in database', 'info');
+                    }
+                    
+                    setStatus(`✅ ${name} thành công!`, 'success');
+                } else {
+                    throw new Error(`Code ${data.code}: ${data.message}`);
+                }
+            } catch (error) {
+                log(`❌ ${name} - FAILED: ${error.message}`, 'error');
+                setStatus(`❌ ${name} thất bại!`, 'error');
+            }
+        }
+
+        async function testLocations() {
+            await testAPI('/locations', 'Locations API');
+        }
+
+        async function testIndustries() {
+            await testAPI('/industries', 'Industries API');
+        }
+
+        async function testJobs() {
+            await testAPI('/posts/public', 'Jobs API');
+        }
+
+        function clearOutput() {
+            document.getElementById('output').textContent = 'Log cleared.\n';
+        }
+
+        // Auto-load token from localStorage on page load
+        window.onload = function() {
+            const savedToken = localStorage.getItem('accessToken');
+            if (savedToken) {
+                accessToken = savedToken;
+                log('💾 Đã tìm thấy token trong localStorage', 'success');
+                displayToken(savedToken);
+                setStatus('✅ Token đã sẵn sàng từ localStorage', 'success');
+                enableButtons();
+            }
+        };
+    </script>
+</body>
+</html>

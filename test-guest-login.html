@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Guest Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #f9fafb;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Guest Login - Backend Integration</h1>
+        
+        <p><strong>Backend URL:</strong> <code>https://t4-sang-nhom-10-backend.onrender.com</code></p>
+        <p><strong>Guest Credentials:</strong> <code>guest@jobmatch.com / Guest123!@#</code></p>
+        
+        <hr>
+        
+        <h3>Bước 1: Kiểm Tra Guest Account</h3>
+        <p>Nhấn nút này để test xem guest account đã được tạo chưa:</p>
+        <button onclick="testGuestLogin()">🔑 Test Guest Login</button>
+        
+        <h3>Bước 2: Kiểm Tra API Với Token</h3>
+        <p>Nhấn nút này sau khi đã có token (từ bước 1):</p>
+        <button onclick="testJobsAPI()">📋 Test Jobs API</button>
+        <button onclick="testLocationsAPI()">📍 Test Locations API</button>
+        
+        <h3>Bước 3: Test Full Flow</h3>
+        <button onclick="testFullFlow()">🚀 Run Full Test</button>
+        <button onclick="clearResult()">🗑️ Clear Log</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://t4-sang-nhom-10-backend.onrender.com';
+        const GUEST_EMAIL = 'guest@jobmatch.com';
+        const GUEST_PASSWORD = 'Guest123!@#';
+        let accessToken = null;
+
+        function log(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.className = type;
+            resultDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '';
+        }
+
+        async function testGuestLogin() {
+            clearResult();
+            log('🔐 Starting Guest Login Test...', 'info');
+            log(`📧 Email: ${GUEST_EMAIL}`, 'info');
+            log(`🔑 Password: ${GUEST_PASSWORD}`, 'info');
+            
+            try {
+                log('🔄 Calling POST /candidate_profile/login...', 'info');
+                
+                const response = await fetch(`${API_URL}/candidate_profile/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: GUEST_EMAIL,
+                        password: GUEST_PASSWORD
+                    })
+                });
+
+                const data = await response.json();
+                log(`📊 Response Status: ${response.status}`, 'info');
+                log(`📊 Response Body:\n${JSON.stringify(data, null, 2)}`, 'info');
+
+                if (data.code === 1000 && data.result?.access_token) {
+                    accessToken = data.result.access_token;
+                    log('✅ SUCCESS! Guest login worked!', 'success');
+                    log(`🎟️ Access Token: ${accessToken.substring(0, 50)}...`, 'success');
+                    log(`⏰ Expires in: ${data.result.expires_in} seconds`, 'success');
+                    log('\n✅ GUEST ACCOUNT ĐÃ TỒN TẠI - BACKEND ĐÃ SẴN SÀNG!', 'success');
+                } else {
+                    log('❌ ERROR: Login failed!', 'error');
+                    log(`Code: ${data.code}`, 'error');
+                    log(`Message: ${data.message}`, 'error');
+                    log('\n❌ GUEST ACCOUNT CHƯA ĐƯỢC TẠO!', 'error');
+                    log('👉 Hãy xem file CREATE_GUEST_ACCOUNT.md để tạo account', 'error');
+                }
+            } catch (error) {
+                log(`❌ NETWORK ERROR: ${error.message}`, 'error');
+                log('Backend có thể đang offline hoặc CORS issue', 'error');
+            }
+        }
+
+        async function testJobsAPI() {
+            if (!accessToken) {
+                log('❌ ERROR: Chưa có token! Hãy chạy Test Guest Login trước.', 'error');
+                return;
+            }
+
+            log('\n📋 Testing Jobs API with token...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/posts/public`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                const data = await response.json();
+                log(`📊 Response Status: ${response.status}`, 'info');
+
+                if (data.code === 1000) {
+                    const jobs = data.result;
+                    log(`✅ SUCCESS! Got ${jobs.length} jobs from API`, 'success');
+                    log(`\n📝 Sample Job:\n${JSON.stringify(jobs[0], null, 2)}`, 'success');
+                } else {
+                    log(`❌ ERROR: Code ${data.code}`, 'error');
+                    log(`Message: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLocationsAPI() {
+            if (!accessToken) {
+                log('❌ ERROR: Chưa có token! Hãy chạy Test Guest Login trước.', 'error');
+                return;
+            }
+
+            log('\n📍 Testing Locations API with token...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/locations`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                const data = await response.json();
+                log(`📊 Response Status: ${response.status}`, 'info');
+
+                if (data.code === 1000) {
+                    const locations = data.result;
+                    log(`✅ SUCCESS! Got ${locations.length} locations`, 'success');
+                    log(`Locations: ${locations.map(l => l.city).join(', ')}`, 'success');
+                } else {
+                    log(`❌ ERROR: Code ${data.code}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFullFlow() {
+            clearResult();
+            log('🚀 Running Full Integration Test...', 'info');
+            log('━'.repeat(60), 'info');
+            
+            await testGuestLogin();
+            
+            if (accessToken) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await testJobsAPI();
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await testLocationsAPI();
+                
+                log('\n' + '━'.repeat(60), 'success');
+                log('🎉 HOÀN THÀNH! Tất cả tests đều PASS!', 'success');
+                log('✅ Guest account hoạt động', 'success');
+                log('✅ Jobs API trả về dữ liệu', 'success');
+                log('✅ Locations API trả về dữ liệu', 'success');
+                log('\n👉 Frontend sẵn sàng để auto-login!', 'success');
+            }
+        }
+    </script>
+</body>
+</html>

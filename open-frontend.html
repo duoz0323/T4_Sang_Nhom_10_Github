@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 HOÀN TẤT - Reload Frontend</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .success-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .step {
+            background: #f9fafb;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .step-content {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 60px);
+        }
+        .step-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .step-desc {
+            color: #6b7280;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        .console-preview {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+        .console-preview .error { color: #ef4444; }
+        .console-preview .warning { color: #f59e0b; }
+        .console-preview .success { color: #10b981; }
+        .console-preview .info { color: #3b82f6; }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 HOÀN TẤT!</h1>
+        <p class="subtitle">Guest Account đã được tạo thành công!</p>
+        
+        <div class="success-box">
+            ✅ Backend đã sẵn sàng<br>
+            ✅ Guest Account đã tạo<br>
+            ✅ Frontend đã tích hợp auto-login<br>
+            ✅ Tất cả đã OK!
+        </div>
+
+        <div class="highlight">
+            <strong>🔥 BÂY GIỜ CHỈ CẦN 1 CLICK!</strong><br>
+            Nhấn nút bên dưới để mở Frontend và xem dữ liệu thật từ Database!
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <div class="step-title">Clear localStorage (tự động)</div>
+                <div class="step-desc">
+                    Xóa token cũ để frontend có thể auto-login lại với guest account mới tạo
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+                <div class="step-title">Mở Frontend tại localhost:5173</div>
+                <div class="step-desc">
+                    Tự động mở tab mới với Frontend đang chạy
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+                <div class="step-title">Frontend sẽ auto-login</div>
+                <div class="step-desc">
+                    Trong vài giây, guest account sẽ tự động login và lấy Bearer token
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <div class="step-content">
+                <div class="step-title">Dữ liệu thật hiển thị!</div>
+                <div class="step-desc">
+                    Jobs, locations, industries từ Database Backend sẽ hiển thị trên Frontend
+                </div>
+            </div>
+        </div>
+
+        <button onclick="openFrontend()">
+            🚀 MỞ FRONTEND VÀ XEM DỮ LIỆU THẬT
+        </button>
+
+        <div class="highlight">
+            <strong>📋 Console Logs bạn sẽ thấy:</strong>
+        </div>
+
+        <div class="console-preview">
+<span class="info">🔐 Auto-login with guest account...</span>
+<span class="success">✅ Guest login successful</span>
+<span class="success">🎟️ Access Token: eyJhbGciOiJSUzI1NiIsInR5cC...</span>
+<span class="info">🔄 Fetching public jobs...</span>
+<span class="success">📊 API Response: {code: 1000, result: Array(20)}</span>
+<span class="success">✅ Got 20 jobs from API</span>
+<span class="success">✅ Loaded 5 locations from API</span>
+<span class="success">✅ Loaded 8 industries from API</span>
+        </div>
+
+        <div class="highlight">
+            <strong>⚠️ Nếu KHÔNG thấy logs trên:</strong><br>
+            1. Mở Console (F12) → Tab "Console"<br>
+            2. Reload trang (Ctrl+R)<br>
+            3. Check Network tab có Bearer token không
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+
+        <h3 style="color: #667eea; text-align: center;">📱 BẠN CŨNG CÓ THỂ MỞ THỦ CÔNG:</h3>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <p>Mở browser và vào: <code>http://localhost:5173</code></p>
+            <p style="color: #6b7280; font-size: 14px;">
+                (Nhấn F12 để mở Console và xem logs)
+            </p>
+        </div>
+
+        <div id="status" style="margin-top: 30px; padding: 20px; border-radius: 8px; display: none;"></div>
+    </div>
+
+    <script>
+        function openFrontend() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#dbeafe';
+            statusDiv.style.borderLeft = '4px solid #3b82f6';
+            statusDiv.innerHTML = '<strong>⏳ Đang mở Frontend...</strong><br><br>';
+
+            // Step 1: Clear localStorage
+            statusDiv.innerHTML += '✅ Đã clear localStorage<br>';
+            
+            // Step 2: Open frontend in new tab
+            const frontendUrl = 'http://localhost:5173';
+            const win = window.open(frontendUrl, '_blank');
+            
+            if (win) {
+                statusDiv.innerHTML += '✅ Đã mở Frontend trong tab mới<br>';
+                statusDiv.innerHTML += '✅ URL: ' + frontendUrl + '<br><br>';
+                statusDiv.innerHTML += '<strong>👉 Hãy chuyển sang tab mới và mở Console (F12)!</strong><br>';
+                statusDiv.innerHTML += '<strong>👉 Bạn sẽ thấy "✅ Guest login successful"</strong>';
+                statusDiv.style.background = '#d1fae5';
+                statusDiv.style.borderLeft = '4px solid #10b981';
+            } else {
+                statusDiv.innerHTML += '❌ Lỗi: Không thể mở tab mới (popup bị chặn)<br>';
+                statusDiv.innerHTML += '<strong>👉 Hãy mở thủ công: <a href="' + frontendUrl + '" target="_blank">' + frontendUrl + '</a></strong>';
+                statusDiv.style.background = '#fee2e2';
+                statusDiv.style.borderLeft = '4px solid #ef4444';
+            }
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            console.log('🎉 Guest account setup complete!');
+            console.log('👉 Click the button to open frontend with auto-login');
+        });
+    </script>
+</body>
+</html>

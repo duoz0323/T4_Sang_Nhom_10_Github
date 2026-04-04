@@ -10,7 +10,7 @@ const jobService = {
    */
   getPublicJobs: async () => {
     try {
-      const response = await jobAPI.getPublicJobs();
+      const response = await jobAPI.getAllActiveJobs();
       return response.data?.result || [];
     } catch (error) {
       console.error('Error fetching public jobs:', error);
@@ -25,7 +25,7 @@ const jobService = {
    */
   getJobDetail: async (jobId) => {
     try {
-      const response = await jobAPI.getJobDetail(jobId);
+      const response = await jobAPI.getJobById(jobId);
       return response.data?.result || null;
     } catch (error) {
       console.error('Error fetching job detail:', error);

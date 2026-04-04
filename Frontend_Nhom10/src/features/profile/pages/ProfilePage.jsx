@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { profileAPI } from '../../../services/api';
+import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import ProfileSidebar from '../../../components/layout/ProfileSidebar';
@@ -11,12 +12,15 @@ function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ 
     name: '', 
     position: '', 
     email: '', 
     phone: '',
-    bio: '' 
+    bio: '',
+    address: '',
+    birthday: ''
   });
 
   useEffect(() => {
@@ -26,6 +30,7 @@ function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
+      await ensureAuthenticated(); // Ensure token before API call
       console.log('🔄 Fetching candidate profile...');
       const response = await profileAPI.getMyCandidateProfile();
       console.log('📋 Profile response:', response);
@@ -38,8 +43,10 @@ function ProfilePage() {
           name: profileData.fullName || '',
           position: profileData.currentJobTitle || '',
           email: profileData.email || '',
-          phone: profileData.phone || '',
-          bio: profileData.bio || ''
+          phone: profileData.phoneNumber || '',
+          bio: profileData.description || '',
+          address: profileData.address || '',
+          birthday: profileData.birthday || ''
         });
       } else {
         console.warn('⚠️ No profile data returned');
@@ -58,34 +65,70 @@ function ProfilePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { 
-        toast.error('Ảnh không được vượt quá 5MB'); 
-        return; 
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) { 
+      toast.error('Ảnh không được vượt quá 5MB'); 
+      return; 
+    }
+    if (!file.type.startsWith('image/')) { 
+      toast.error('Vui lòng chọn file ảnh'); 
+      return; 
+    }
+
+    try {
+      setUploading(true);
+      toast.info('Đang tải ảnh lên...');
+      
+      const response = await profileAPI.uploadCandidateAvatar(profile.candidateProfileId, file);
+      
+      if (response?.data?.code === 1000) {
+        toast.success('Đã cập nhật ảnh đại diện thành công');
+        await fetchProfile(); // Refresh profile
+      } else {
+        toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
-      if (!file.type.startsWith('image/')) { 
-        toast.error('Vui lòng chọn file ảnh'); 
-        return; 
-      }
-      toast.success('Đã tải ảnh đại diện');
+    } catch (err) {
+      console.error('❌ Error uploading avatar:', err);
+      toast.error('Không thể tải ảnh lên. Vui lòng thử lại.');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleCVUpload = (e) => {
+  const handleCVUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!validTypes.includes(file.type)) { 
-        toast.error('Chỉ hỗ trợ file PDF hoặc DOCX'); 
-        return; 
+    if (!file) return;
+
+    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!validTypes.includes(file.type)) { 
+      toast.error('Chỉ hỗ trợ file PDF hoặc DOCX'); 
+      return; 
+    }
+    if (file.size > 5 * 1024 * 1024) { 
+      toast.error('File không được vượt quá 5MB'); 
+      return; 
+    }
+
+    try {
+      setUploading(true);
+      toast.info('Đang tải CV lên...');
+      
+      const response = await profileAPI.uploadCV(profile.candidateProfileId, file);
+      
+      if (response?.data?.code === 1000) {
+        toast.success(`Đã tải CV lên thành công: ${file.name}`);
+        await fetchProfile(); // Refresh profile
+      } else {
+        toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
-      if (file.size > 5 * 1024 * 1024) { 
-        toast.error('File không được vượt quá 5MB'); 
-        return; 
-      }
-      toast.success(`Đã tải lên: ${file.name}`);
+    } catch (err) {
+      console.error('❌ Error uploading CV:', err);
+      toast.error('Không thể tải CV lên. Vui lòng thử lại.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -95,10 +138,44 @@ function ProfilePage() {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    toast.success('Đã lưu thay đổi thành công!');
-    setProfile(prev => ({ ...prev, ...formData }));
+    
+    if (!profile?.candidateProfileId) {
+      toast.error('Không tìm thấy thông tin profile');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      toast.info('Đang lưu thay đổi...');
+      
+      const updateData = {
+        fullName: formData.name,
+        phoneNumber: formData.phone,
+        address: formData.address,
+        description: formData.bio,
+        birthday: formData.birthday
+      };
+
+      const response = await profileAPI.updateCandidateProfile(
+        profile.candidateProfileId,
+        updateData
+      );
+      
+      if (response?.data?.code === 1000) {
+        toast.success('Đã lưu thay đổi thành công!');
+        await fetchProfile(); // Refresh profile
+      } else {
+        toast.error(response?.data?.message || 'Có lỗi xảy ra');
+      }
+    } catch (err) {
+      console.error('❌ Error updating profile:', err);
+      const errorMessage = err.response?.data?.message || 'Không thể lưu thay đổi';
+      toast.error(errorMessage);
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { jobAPI, locationAPI, skillAPI } from '../../../services/api';
+import { jobAPI, locationAPI, industryAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 
@@ -14,15 +15,15 @@ const MOCK_LOCATIONS = [
   { id: 5, city: 'Hải Phòng' },
 ];
 
-const MOCK_SKILLS = [
-  { skillId: 1, name: 'React' },
-  { skillId: 2, name: 'Java' },
-  { skillId: 3, name: 'Python' },
-  { skillId: 4, name: 'JavaScript' },
-  { skillId: 5, name: 'Node.js' },
-  { skillId: 6, name: 'SQL' },
-  { skillId: 7, name: 'Marketing' },
-  { skillId: 8, name: 'Sales' },
+const MOCK_INDUSTRIES = [
+  { industryId: 1, nameIndustry: 'Công nghệ thông tin' },
+  { industryId: 2, nameIndustry: 'Marketing' },
+  { industryId: 3, nameIndustry: 'Kinh doanh / Bán hàng' },
+  { industryId: 4, nameIndustry: 'Tài chính - Ngân hàng' },
+  { industryId: 5, nameIndustry: 'Giáo dục - Đào tạo' },
+  { industryId: 6, nameIndustry: 'Nhân sự' },
+  { industryId: 7, nameIndustry: 'Thiết kế đồ họa' },
+  { industryId: 8, nameIndustry: 'Xây dựng' },
 ];
 
 const MOCK_JOBS = [
@@ -82,99 +83,82 @@ const HomePage = () => {
   // Search state
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
+  const [searchIndustry, setSearchIndustry] = useState('');
   const [locations, setLocations] = useState(MOCK_LOCATIONS);
-  const [skills, setSkills] = useState(MOCK_SKILLS);
+  const [industries, setIndustries] = useState(MOCK_INDUSTRIES);
 
-  // Fetch locations and skills - ALWAYS start with mock data
+  // Fetch locations and industries
   useEffect(() => {
     const fetchData = async () => {
-      // Set mock data immediately
-      setLocations(MOCK_LOCATIONS);
-      setSkills(MOCK_SKILLS);
-      console.log('📦 Set initial mock data - Locations:', MOCK_LOCATIONS.length, 'Skills:', MOCK_SKILLS.length);
-      
-      // Try to fetch from API only if authenticated
-      if (!isAuthenticated) {
-        console.log('ℹ️ Not authenticated, using mock data only');
-        return;
-      }
-      
       try {
-        console.log('🔄 Attempting to fetch from API...');
-        const [locationsRes, skillsRes] = await Promise.all([
-          locationAPI.getAll(),
-          skillAPI.getAll()
-        ]);
-        
-        console.log('📍 Locations API response:', locationsRes.data);
-        console.log('🎯 Skills API response:', skillsRes.data);
-        
-        // Check for authentication errors
-        if (locationsRes?.data?.code === 1006 || skillsRes?.data?.code === 1006) {
-          console.warn('⚠️ API returned Unauthenticated - keeping mock data');
+        const hasAuth = await ensureAuthenticated();
+        if (!hasAuth) {
+          setLocations(MOCK_LOCATIONS);
+          setIndustries(MOCK_INDUSTRIES);
           return;
         }
-        
-        // Only update if we got valid data
-        if (locationsRes?.data?.result && locationsRes.data.result.length > 0) {
+
+        const [locationsRes, industriesRes] = await Promise.all([
+          locationAPI.getAll(),
+          industryAPI.getAll()
+        ]);
+
+        if (locationsRes?.data?.code === 1000 && locationsRes?.data?.result) {
           setLocations(locationsRes.data.result);
-          console.log('✅ Updated locations from API:', locationsRes.data.result.length);
+        } else {
+          setLocations(MOCK_LOCATIONS);
         }
-        
-        if (skillsRes?.data?.result && skillsRes.data.result.length > 0) {
-          setSkills(skillsRes.data.result);
-          console.log('✅ Updated skills from API:', skillsRes.data.result.length);
+
+        if (industriesRes?.data?.code === 1000 && industriesRes?.data?.result) {
+          setIndustries(industriesRes.data.result);
+        } else {
+          setIndustries(MOCK_INDUSTRIES);
         }
       } catch (err) {
-        console.error('❌ API Error:', err.response?.data || err.message);
-        console.log('⚠️ Keeping mock data');
+        console.error('API Error:', err.message);
+        setLocations(MOCK_LOCATIONS);
+        setIndustries(MOCK_INDUSTRIES);
       }
     };
     fetchData();
-  }, [isAuthenticated]);
+  }, []);
 
   const handleSearch = () => {
-    console.log('🔍 Searching for:', searchKeyword, 'in', searchLocation);
     // TODO: Implement search functionality
   };
 
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
-      console.log('🔍 Fetching jobs - isAuthenticated:', isAuthenticated);
-      
-      // Set mock data first as fallback
-      let finalJobs = MOCK_JOBS.slice(0, 3);
-      
-      // Try API if authenticated
-      if (isAuthenticated) {
-        try {
-          console.log('🔄 Attempting to fetch jobs from API...');
-          const response = await jobAPI.getAllActiveJobs();
-          console.log('✅ API Response:', response.data);
-          
-          // Check for auth errors
-          if (response?.data?.code === 1006) {
-            console.warn('⚠️ API returned Unauthenticated (1006)');
-          } else if (response?.data?.result && response.data.result.length > 0) {
-            const jobsData = response.data.result;
-            console.log('📊 Got', jobsData.length, 'jobs from API');
-            finalJobs = jobsData.slice(0, 3);
-          }
-        } catch (err) {
-          console.error('❌ Error fetching jobs:', err.response?.data || err.message);
+
+      try {
+        const hasAuth = await ensureAuthenticated();
+        if (!hasAuth) {
+          throw new Error('Could not authenticate');
         }
+
+        // ✅ Gọi API GET /posts/public
+        const response = await jobAPI.getAllActiveJobs();
+
+        if (response?.data?.code === 1000 && response?.data?.result) {
+          const jobsData = response.data.result;
+          setJobs(jobsData.slice(0, 6)); // Show first 6 jobs on homepage
+          setError(null);
+        } else {
+          setError('Không thể tải dữ liệu công việc');
+          setJobs([]);
+        }
+      } catch (err) {
+        console.error('Error fetching jobs:', err.message);
+        setError('Có lỗi xảy ra khi tải dữ liệu');
+        setJobs([]);
+      } finally {
+        setLoading(false);
       }
-      
-      // Always set jobs (either from API or mock)
-      console.log('📦 Setting jobs:', finalJobs.length);
-      setJobs(finalJobs);
-      setError(null);
-      setLoading(false);
     };
 
     fetchJobs();
-  }, [isAuthenticated]);
+  }, []);
 
   const getEmploymentTypeLabel = (status) => {
     // Sử dụng status từ job thay vì employmentType
@@ -204,11 +188,9 @@ const HomePage = () => {
     return `${salaryRequire.toLocaleString()} VNĐ`;
   };
 
-  const getCompanyName = (description) => {
-    // Extract company name from description (format: "company - location")
-    if (!description) return 'Company';
-    const parts = description.split(' - ');
-    return parts[0] || 'Company';
+  const getCompanyName = (job) => {
+    // Backend has job.companyProfile.companyName
+    return job?.companyProfile?.companyName || 'Company';
   };
 
   const getLocation = (locations) => {
@@ -216,17 +198,10 @@ const HomePage = () => {
     return locations.map(loc => loc.city).join(', ');
   };
 
-  const getSkills = (industries) => {
-    if (!industries || industries.length === 0) return [];
-    const allSkills = [];
-    industries.forEach(industry => {
-      if (industry.skills && industry.skills.length > 0) {
-        industry.skills.forEach(skill => {
-          allSkills.push(skill.skillName);
-        });
-      }
-    });
-    return allSkills;
+  const getSkills = (job) => {
+    // Backend structure: job.skills (array of SkillResponse)
+    if (!job?.skills || job.skills.length === 0) return [];
+    return job.skills.map(skill => skill.skillName);
   };
 
   return (
@@ -269,8 +244,8 @@ const HomePage = () => {
                       onChange={(e) => setSearchKeyword(e.target.value)}
                     >
                       <option value="">Chức danh, kỹ năng...</option>
-                      {skills.map((skill) => (
-                        <option key={skill.skillId} value={skill.name}>{skill.name}</option>
+                      {industries.map((industry) => (
+                        <option key={industry.industryId} value={industry.nameIndustry}>{industry.nameIndustry}</option>
                       ))}
                     </select>
                   </div>
@@ -423,9 +398,6 @@ const HomePage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* DEBUG INFO */}
-              {console.log('🔵 HomePage render - Loading:', loading, 'Jobs count:', jobs.length, 'Error:', error)}
-              
               {loading ? (
                 // Loading skeleton
                 [...Array(3)].map((_, index) => (
@@ -464,9 +436,13 @@ const HomePage = () => {
                   >
                     <div className="flex justify-between items-start mb-6">
                       <div className="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center p-2.5 border border-outline-variant/10 overflow-hidden">
-                        <div className="bg-primary-container w-full h-full flex items-center justify-center rounded-lg text-white font-black text-xs">
-                          {getCompanyName(job.description).substring(0, 3).toUpperCase()}
-                        </div>
+                        {job.companyProfile?.avatar ? (
+                          <img src={job.companyProfile.avatar} alt={getCompanyName(job)} className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          <div className="bg-primary-container w-full h-full flex items-center justify-center rounded-lg text-white font-black text-xs">
+                            {getCompanyName(job).substring(0, 3).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       <span className={`${getEmploymentTypeBadgeClass(job.status)} text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase`}>
                         {getEmploymentTypeLabel(job.status)}
@@ -476,10 +452,10 @@ const HomePage = () => {
                       {job.title}
                     </h3>
                     <p className="text-on-surface-variant font-medium text-xs mb-5 flex items-center gap-1">
-                      {getCompanyName(job.description)} <span className="text-outline mx-1">•</span> {getLocation(job.locations)}
+                      {getCompanyName(job)} <span className="text-outline mx-1">•</span> {getLocation(job.locations)}
                     </p>
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {getSkills(job.industries).slice(0, 3).map((skill, idx) => (
+                      {getSkills(job).slice(0, 3).map((skill, idx) => (
                         <span key={idx} className="px-2.5 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded-lg">
                           {skill}
                         </span>

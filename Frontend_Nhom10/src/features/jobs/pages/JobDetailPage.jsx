@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { jobAPI } from '../../../services/api';
+import { ensureAuthenticated } from '../../../services/guestAuth';
 import { useAuth } from '../../../contexts/AuthContext';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
@@ -8,20 +9,29 @@ import Footer from '../../../components/layout/Footer';
 const JobDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, userRole } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    phone: '',
+    coverLetter: '',
     cv: null
   });
 
   useEffect(() => {
     fetchJobDetail();
-  }, [id]);
+    if (isAuthenticated && userRole === 'CANDIDATE') {
+      checkIfSaved();
+    }
+  }, [id, isAuthenticated]);
 
   const fetchJobDetail = async () => {
     try {
+      await ensureAuthenticated(); // Ensure token before API call
       const response = await jobAPI.getJobById(id);
       console.log('📋 Job detail response:', response);
       
@@ -66,6 +76,45 @@ const JobDetailPage = () => {
     }
   };
 
+  const checkIfSaved = async () => {
+    try {
+      const response = await jobAPI.checkIfSaved(id);
+      if (response?.data?.result) {
+        setIsSaved(response.data.result);
+      }
+    } catch (err) {
+      console.error('❌ Error checking saved status:', err);
+    }
+  };
+
+  const toggleSaveJob = async () => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để lưu công việc');
+      navigate('/login');
+      return;
+    }
+
+    if (userRole !== 'CANDIDATE') {
+      alert('Chỉ ứng viên mới có thể lưu công việc');
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await jobAPI.unsaveJob(id);
+        setIsSaved(false);
+        alert('Đã bỏ lưu công việc');
+      } else {
+        await jobAPI.saveJob(id);
+        setIsSaved(true);
+        alert('Đã lưu công việc thành công');
+      }
+    } catch (err) {
+      console.error('❌ Error toggling save:', err);
+      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -90,15 +139,58 @@ const JobDetailPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.email || !formData.cv) {
-      alert('Vui lòng điền đầy đủ thông tin');
+    
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để ứng tuyển');
+      navigate('/login');
       return;
     }
-    console.log('Submit application:', formData);
-    alert('Đơn ứng tuyển đã được gửi thành công!');
-    // TODO: Integrate with application API
+
+    if (userRole !== 'CANDIDATE') {
+      alert('Chỉ ứng viên mới có thể ứng tuyển');
+      return;
+    }
+
+    if (!formData.fullName || !formData.email || !formData.cv) {
+      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    setIsApplying(true);
+    
+    try {
+      const applicationData = new FormData();
+      applicationData.append('postId', id);
+      applicationData.append('fullName', formData.fullName);
+      applicationData.append('email', formData.email);
+      applicationData.append('phone', formData.phone || '');
+      applicationData.append('coverLetter', formData.coverLetter || '');
+      applicationData.append('cv', formData.cv);
+
+      const response = await jobAPI.applyJob(id, applicationData);
+      
+      if (response?.data?.code === 1000) {
+        alert('Đơn ứng tuyển đã được gửi thành công!');
+        // Reset form
+        setFormData({
+          fullName: '',
+          email: '',
+          phone: '',
+          coverLetter: '',
+          cv: null
+        });
+      } else {
+        alert(response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      console.error('❌ Error applying:', err);
+      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
+      alert(errorMessage);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   if (loading) {
