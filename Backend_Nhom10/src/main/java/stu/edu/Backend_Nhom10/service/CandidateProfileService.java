@@ -58,7 +58,6 @@ public class CandidateProfileService {
 
     @PreAuthorize("hasAnyRole('CANDIDATE')")
     public CandidateProfileResponse getMyProfile() {
-        log.info("getMyProfile đã được gọi");
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
 

@@ -17,7 +17,7 @@ public enum ErrorCode {
     USERNAME_IS_MISSING(1010, "Please enter username", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1011, "User not existed", HttpStatus.BAD_REQUEST),
     PAGE_NOT_FOUND(1012, "Page not found", HttpStatus.NOT_FOUND),
-    PROFILE_NOT_FOUND(1013, "profile not found", HttpStatus.NOT_FOUND),
+    CANDIDATE_NOT_FOUND(1013, "Candidate not found", HttpStatus.NOT_FOUND),
 
     //Valid Code
     NOT_BLANK(1014,"Cannot be left blank",HttpStatus.BAD_REQUEST),
@@ -54,8 +54,10 @@ public enum ErrorCode {
 
     //APPLICATION
     APPLICATION_NOT_FOUND(1033,"Application not found",HttpStatus.BAD_REQUEST),
-    ALREADY_PROCESSED(1034,"This application has been processed",HttpStatus.BAD_REQUEST)
-    ;
+    ALREADY_PROCESSED(1034,"This application has been processed",HttpStatus.BAD_REQUEST),
+    //PROFILE
+    PROFILE_NOT_FOUND(1035, "profile not found", HttpStatus.NOT_FOUND),
+    NOT_PROFILE_DEFAULT(1036,"You don't have profileCV default" ,HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

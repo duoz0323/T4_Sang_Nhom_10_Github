@@ -64,7 +64,7 @@ public class ProfileCVService {
         ).contains(contentType)) {
             throw new AppException(ErrorCode.INVALID_FILE_TYPE);
         }
-        String candidateProfileId = securityUtils.getObject();
+        String candidateProfileId = securityUtils.getSubject();
         CandidateProfile candidate = candidateProfileRepository
                 .findByUserId(candidateProfileId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
@@ -115,7 +115,7 @@ public class ProfileCVService {
         return profileCVMapper.toProfileCVResponse(profileCVRepository.save(profileCV));
     }
     public void deleteProfileCV(String profileCVId) throws IOException {
-        String userId = securityUtils.getObject();
+        String userId = securityUtils.getSubject();
         ProfileCV profileCV = profileCVRepository.findById(profileCVId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
         if (!profileCV.getCandidateProfile().getUserId().equals(userId)) {
@@ -130,7 +130,7 @@ public class ProfileCVService {
         profileCVRepository.delete(profileCV);
     }
     public ProfileCVResponse setIsDefault(String profileCVId){
-        String userId = securityUtils.getObject();
+        String userId = securityUtils.getSubject();
 
         ProfileCV profileCV = profileCVRepository.findById(profileCVId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
@@ -141,7 +141,7 @@ public class ProfileCVService {
         return profileCVMapper.toProfileCVResponse(profileCVRepository.save(profileCV));
     }
     public ProfileCVResponse setUnDefault(String profileCVId){
-        String userId = securityUtils.getObject();
+        String userId = securityUtils.getSubject();
         ProfileCV profileCV = profileCVRepository.findById(profileCVId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
         if (!profileCV.getCandidateProfile().getUserId().equals(userId)) {
@@ -186,7 +186,7 @@ public class ProfileCVService {
                 .body(new ByteArrayResource(fileBytes));
     }
     public List<ProfileCVResponse> getAllMyProfile(){
-        String userId = securityUtils.getObject();
+        String userId = securityUtils.getSubject();
         return profileCVRepository.findByCandidateProfile_UserId(userId)
                 .stream()
                 .map(profileCVMapper::toProfileCVResponse)

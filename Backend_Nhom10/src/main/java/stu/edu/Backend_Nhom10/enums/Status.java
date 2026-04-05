@@ -1,7 +1,8 @@
 package stu.edu.Backend_Nhom10.enums;
 
 public enum Status {
-    ACCEPTED,
+    WITHDRAWN,
+    ACCEPTED,//được duyệt
     ACTIVE, //đã hiển thị đã được duyệt
     PENDING, //chờ duyệt
     REJECTED, //bị từ chối
