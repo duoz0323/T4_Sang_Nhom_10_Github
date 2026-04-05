@@ -3,6 +3,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import stu.edu.Backend_Nhom10.dto.request.IndustryCreateRequest;
 import stu.edu.Backend_Nhom10.dto.response.IndustryResponse;
@@ -21,6 +22,7 @@ public class IndustryService {
     IndustryRepository industryRepository;
     IndustryMapper industryMapper;
 
+    @PreAuthorize("hasRole('ADMIN')")
     public IndustryResponse createIndustry(IndustryCreateRequest request){
         String industryName = request.getNameIndustry().trim();
         // tránh duplicate
@@ -31,6 +33,7 @@ public class IndustryService {
         Industry industry = industryMapper.toIndustryEntity(request);
         return industryMapper.toIndustryResponse(industryRepository.save(industry));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public IndustryResponse updateIndustry(Long id,IndustryCreateRequest update){
         Industry industry = industryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.INDUSTRY_NOT_FOUND));
@@ -51,6 +54,7 @@ public class IndustryService {
 
         return industryMapper.toIndustryResponse(industry);
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public List<IndustryResponse> getAll() {
         return industryRepository.findAll()
                 .stream()
@@ -64,6 +68,7 @@ public class IndustryService {
 //                .map(industryMapper::toIndustryResponse)
 //                .toList();
 //    }
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         Industry industry = industryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.INDUSTRY_NOT_FOUND));

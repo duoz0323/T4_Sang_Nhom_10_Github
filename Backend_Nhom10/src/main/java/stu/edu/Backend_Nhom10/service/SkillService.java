@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import stu.edu.Backend_Nhom10.dto.request.SkillRequest;
 import stu.edu.Backend_Nhom10.dto.response.SkillResponse;
@@ -25,7 +26,7 @@ public class SkillService {
     SkillRepository skillRepository;
     SkillMapper skillMapper;
     IndustryRepository industryRepository;
-
+    @PreAuthorize("hasRole('ADMIN')")
     public SkillResponse createSkill(SkillRequest request){
         String skillName = request.getSkillName().trim();
         // tránh duplicate
@@ -39,6 +40,7 @@ public class SkillService {
         skill.setIndustry(industry);
         return skillMapper.toSkillResponse(skillRepository.save(skill));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public SkillResponse updateSkill(Long id,SkillRequest update){
         Skill skill = skillRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_FOUND));
@@ -59,6 +61,7 @@ public class SkillService {
 
         return skillMapper.toSkillResponse(skill);
     }
+
     public List<SkillResponse> getAll() {
         return skillRepository.findAll()
                 .stream()
@@ -72,6 +75,7 @@ public class SkillService {
                 .map(skillMapper::toSkillResponse)
                 .toList();
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         Skill skill = skillRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_FOUND));

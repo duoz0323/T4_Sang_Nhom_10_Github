@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import stu.edu.Backend_Nhom10.dto.request.PostCreateRequest;
 import stu.edu.Backend_Nhom10.dto.request.PostUpdateRequest;
@@ -33,6 +34,7 @@ public class JobPostingService {
     IndustryRepository industryRepository;
     SkillRepository skillRepository;
     SecurityUtils securityUtils;
+    @PreAuthorize("hasRole('COMPANY')")
     public JobPostingResponse createPost(PostCreateRequest request){
         String userId = securityUtils.getSubject();
         CompanyProfile company = companyProfileRepository
@@ -52,7 +54,7 @@ public class JobPostingService {
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
-
+    @PreAuthorize("hasRole('COMPANY')")
     public JobPostingResponse updatePost(String id, PostUpdateRequest updateRequest){
         JobPosting post = jobPostingRepository.findById(id).orElseThrow(
                 () ->new AppException(ErrorCode.POST_NOT_EXISTED)
@@ -74,7 +76,7 @@ public class JobPostingService {
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
-
+    @PreAuthorize("hasRole('COMPANY')")
     public JobPostingResponse closePost(String id) {
         String companyId = securityUtils.getSubject();
         Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
@@ -86,6 +88,7 @@ public class JobPostingService {
         post.setStatus(Status.CLOSED);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
+    @PreAuthorize("hasRole('COMPANY')")
     public JobPostingResponse reopen(String id) {
         String companyId = securityUtils.getSubject();
         Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
@@ -102,7 +105,7 @@ public class JobPostingService {
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
-
+    @PreAuthorize("hasRole('COMPANY')")
     public List<JobPostingResponse> getMyPosts(){
         String companyId = securityUtils.getSubject();
         Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
@@ -135,6 +138,7 @@ public class JobPostingService {
         return jobPostingMapper.toJobPostingResponse(post);
     }
     //=================ADMIN===================
+    @PreAuthorize("hasRole('ADMIN')")
     public List<JobPostingResponse> getPendingPosts() {
 
         return jobPostingRepository.findAllByStatus(Status.PENDING)
@@ -142,6 +146,7 @@ public class JobPostingService {
                 .map(jobPostingMapper::toJobPostingResponse)
                 .toList();
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public JobPostingResponse updateStatus(String id, Status status) {
         JobPosting post = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));

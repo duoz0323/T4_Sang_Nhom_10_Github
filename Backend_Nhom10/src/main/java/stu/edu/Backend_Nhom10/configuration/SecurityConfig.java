@@ -24,6 +24,11 @@ public class SecurityConfig {
             "/applications/public"
     };
 
+    private final String[] PUBLIC_GET_ENDPOINTS = {
+            "/posts/public",
+            "/posts/*"
+    };
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
@@ -33,6 +38,7 @@ public class SecurityConfig {
                         "/swagger-ui.html"
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                 .requestMatchers("/").permitAll()
                 .anyRequest().authenticated());
 

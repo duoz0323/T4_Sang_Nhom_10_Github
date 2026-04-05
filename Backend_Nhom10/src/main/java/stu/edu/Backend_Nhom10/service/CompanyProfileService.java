@@ -188,7 +188,7 @@ public class CompanyProfileService {
         return splitedStr[splitedStr.length - 1];
     }
 
-    @PreAuthorize("hasAnyRole('Company', 'COMPANY')")
+    @PreAuthorize("hasRole('ADMIN')")
     public CompanyProfileResponse getProfileById(@Valid String profileId) {
         var profile = profileRepository.findById(profileId).orElseThrow(
                 () -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
