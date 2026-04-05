@@ -121,7 +121,6 @@ public class CandidateProfileService {
             } catch (Exception e) {
                 log.warn("Không thể gán role cho User {}: {}", userId, e.getMessage());
             }
-
             var profile = profileMapper.toProfile(request);
             profile.setUserId(userId);
 

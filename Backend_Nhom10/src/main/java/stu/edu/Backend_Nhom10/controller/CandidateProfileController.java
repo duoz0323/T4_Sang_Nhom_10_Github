@@ -55,7 +55,7 @@ public class CandidateProfileController {
                 .result(candidateProfileService.getMyProfile())
                 .build();
     }
-    @PutMapping("/{profileId}")
+    @PutMapping
     ApiResponse<CandidateProfileResponse> updateMyProfile(@RequestBody @Valid CandidateProfileRequest request) {
         return ApiResponse.<CandidateProfileResponse>builder()
                 .result(candidateProfileService.updateMyProfile(request))
