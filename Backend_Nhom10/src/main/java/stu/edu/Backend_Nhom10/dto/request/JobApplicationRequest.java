@@ -13,4 +13,5 @@ public class JobApplicationRequest {
     String name;
     String email;
     String phone;
+    String profileCVId;
 }

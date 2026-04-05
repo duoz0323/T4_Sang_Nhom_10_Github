@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ProfileCVRepository extends JpaRepository<ProfileCV,String> {
     List<ProfileCV> findByCandidateProfile_UserId(String userId);
+    Optional<ProfileCV> findByCandidateProfile_UserIdAndIsDefaultTrue(String userId);
 }

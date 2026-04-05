@@ -13,8 +13,14 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class JobApplicationResponse {
     String id;
-    String jobPostingId;
-    String title;
+    JobPostingResponse jobPosting;
+    CandidateProfileResponse candidateProfile;
+    String email;
+    String phone;
+    String name;
     Status status;
     LocalDateTime appliedAt;
+    String cvPublicId;
+    String fileName;
+    String urlCV;
 }

@@ -34,7 +34,7 @@ public class JobPostingService {
     SkillRepository skillRepository;
     SecurityUtils securityUtils;
     public JobPostingResponse createPost(PostCreateRequest request){
-        String userId = securityUtils.getObject();
+        String userId = securityUtils.getSubject();
         CompanyProfile company = companyProfileRepository
                 .findByUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
@@ -57,7 +57,7 @@ public class JobPostingService {
         JobPosting post = jobPostingRepository.findById(id).orElseThrow(
                 () ->new AppException(ErrorCode.POST_NOT_EXISTED)
         );
-        String userId = securityUtils.getObject();
+        String userId = securityUtils.getSubject();
         if(companyProfileRepository.findByUserId(userId).isEmpty()){
             throw new AppException(ErrorCode.PROFILE_NOT_FOUND);
         }
@@ -76,7 +76,7 @@ public class JobPostingService {
     }
 
     public JobPostingResponse closePost(String id) {
-        String companyId = securityUtils.getObject();
+        String companyId = securityUtils.getSubject();
         Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
         JobPosting post = jobPostingRepository.findById(id)
                         .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
@@ -87,7 +87,7 @@ public class JobPostingService {
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));
     }
     public JobPostingResponse reopen(String id) {
-        String companyId = securityUtils.getObject();
+        String companyId = securityUtils.getSubject();
         Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
         JobPosting post = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
@@ -104,7 +104,7 @@ public class JobPostingService {
     }
 
     public List<JobPostingResponse> getMyPosts(){
-        String companyId = securityUtils.getObject();
+        String companyId = securityUtils.getSubject();
         Optional<CompanyProfile> company = companyProfileRepository.findByUserId(companyId);
         return jobPostingRepository.findByCompanyProfile_CompanyProfileId(company.get().getCompanyProfileId())
                 .stream()

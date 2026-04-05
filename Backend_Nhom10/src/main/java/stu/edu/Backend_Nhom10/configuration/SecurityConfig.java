@@ -21,6 +21,7 @@ public class SecurityConfig {
             "/company_profile/login",
             "/candidate_profile/register",
             "/candidate_profile/login",
+            "/applications/public"
     };
 
     @Bean
