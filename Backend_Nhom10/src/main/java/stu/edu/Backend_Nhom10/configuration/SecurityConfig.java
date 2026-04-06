@@ -26,7 +26,8 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/posts/public",
-            "/posts/*"
+            "/posts/**",
+            "/locations/search"
     };
 
     @Bean

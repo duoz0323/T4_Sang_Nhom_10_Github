@@ -51,6 +51,7 @@ public class LocationService {
         location.setCity(newCity);
         return locationMapper.toLocationResponse(locationRepository.save(location));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public LocationResponse getById(Long id){
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LOCATION_NOT_FOUND));

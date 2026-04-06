@@ -55,13 +55,14 @@ public class SkillService {
         skillMapper.updateSkill(skill,update);
         return skillMapper.toSkillResponse(skillRepository.save(skill));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public SkillResponse getById(Long id){
         Skill skill = skillRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_FOUND));
 
         return skillMapper.toSkillResponse(skill);
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     public List<SkillResponse> getAll() {
         return skillRepository.findAll()
                 .stream()
