@@ -18,6 +18,7 @@ import CompanyDashboard from "./features/company/pages/CompanyDashboard.jsx";
 import CompanyProfilePage from "./features/company/pages/CompanyProfilePage.jsx";
 import CompanySettingsPage from "./features/company/pages/CompanySettingsPage.jsx";
 import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePage.jsx";
+import BlogPage from "./features/blog/pages/BlogPage.jsx";
 import './App.css'
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetailPage />} />
           <Route path="/companies" element={<CompanyListPage />} />
           <Route path="/companies/:id" element={<CompanyDetailPage />} />
+          <Route path="/blog" element={<BlogPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
