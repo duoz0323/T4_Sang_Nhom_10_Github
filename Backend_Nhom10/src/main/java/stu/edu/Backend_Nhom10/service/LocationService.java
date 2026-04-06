@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import stu.edu.Backend_Nhom10.dto.request.LocationRequest;
 import stu.edu.Backend_Nhom10.dto.response.LocationResponse;
@@ -22,7 +23,7 @@ import java.util.List;
 public class LocationService {
     LocationMapper locationMapper;
     LocationRepository locationRepository;
-
+    @PreAuthorize("hasRole('ADMIN')")
     public LocationResponse createLocation(LocationRequest request){
         String city = request.getCity().trim();
         // tránh duplicate
@@ -33,6 +34,8 @@ public class LocationService {
         Location location = locationMapper.toLocationEntity(request);
         return locationMapper.toLocationResponse(locationRepository.save(location));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     public LocationResponse updateLocation(Long id,LocationRequest update){
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LOCATION_NOT_FOUND));
@@ -48,12 +51,14 @@ public class LocationService {
         location.setCity(newCity);
         return locationMapper.toLocationResponse(locationRepository.save(location));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public LocationResponse getById(Long id){
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LOCATION_NOT_FOUND));
 
         return locationMapper.toLocationResponse(location);
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public List<LocationResponse> getAll() {
         return locationRepository.findAll()
                 .stream()
@@ -67,6 +72,7 @@ public class LocationService {
                 .map(locationMapper::toLocationResponse)
                 .toList();
     }
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LOCATION_NOT_FOUND));

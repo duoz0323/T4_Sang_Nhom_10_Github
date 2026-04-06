@@ -121,7 +121,6 @@ public class CandidateProfileService {
             } catch (Exception e) {
                 log.warn("Không thể gán role cho User {}: {}", userId, e.getMessage());
             }
-
             var profile = profileMapper.toProfile(request);
             profile.setUserId(userId);
 
@@ -189,7 +188,7 @@ public class CandidateProfileService {
         return splitedStr[splitedStr.length - 1];
     }
 
-    @PreAuthorize("hasAnyRole('CANDIDATE')")
+    @PreAuthorize("hasRole('ADMIN')")
     public CandidateProfileResponse getProfileById(@Valid String profileId) {
         var profile = profileRepository.findById(profileId).orElseThrow(
                 () -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
