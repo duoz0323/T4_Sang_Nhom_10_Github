@@ -30,7 +30,7 @@ public class SecurityConfig {
             "/locations/search"
     };
 
-    @Bean
+     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
                 .requestMatchers(
@@ -39,7 +39,10 @@ public class SecurityConfig {
                         "/swagger-ui.html"
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+<<<<<<< Updated upstream
                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+=======
+>>>>>>> Stashed changes
                 .requestMatchers("/").permitAll()
                 .anyRequest().authenticated());
 

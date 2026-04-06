@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup-dirs": "node setup_dirs.py || python setup_dirs.py"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
