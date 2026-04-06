@@ -1,11 +1,11 @@
-// Business background image for auth pages
+// Hình nền kinh doanh cho các trang xác thực
 const BusinessHeroBackground = () => {
   return (
     <div className="absolute inset-0">
-      {/* Fallback gradient background */}
+      {/* Nền gradient dự phòng */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-slate-800 to-slate-900" />
-      
-      {/* Business cityscape hero image */}
+
+      {/* Hình ảnh hero đô thị kinh doanh */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{

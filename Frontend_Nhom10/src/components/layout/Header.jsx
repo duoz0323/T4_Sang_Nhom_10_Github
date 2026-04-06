@@ -8,7 +8,7 @@ function Header() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
+  // Đóng dropdown khi bấm bên ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -29,11 +29,11 @@ function Header() {
     setShowDropdown(false);
   };
 
-  // Determine home path based on user role
+  // Xác định đường dẫn trang chủ dựa trên vai trò người dùng
   const getHomePath = () => {
     if (!isAuthenticated) return '/';
+    if (isAdmin) return '/admin/dashboard';
     if (isCompany) return '/company/dashboard';
-    if (isAdmin) return '/users';
     return '/'; // Applicant
   };
 
@@ -41,11 +41,15 @@ function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-outline-variant shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
         {/* Logo */}
-        <Link to={getHomePath()} className="text-2xl font-manrope font-bold text-primary hover:opacity-80 transition-opacity">
-          JobMatch
+        <Link to={getHomePath()} className="hover:opacity-80 transition-opacity">
+          <img 
+            src="/images/logo.png" 
+            alt="TalentLink Logo" 
+            className="h-20 w-auto object-contain"
+          />
         </Link>
 
-        {/* Navigation Menu - Only show for Applicants or not logged in - centered */}
+        {/* Menu điều hướng - Chỉ hiển thị cho ứng viên hoặc chưa đăng nhập - ở giữa */}
         {(!isAuthenticated || isApplicant) && (
           <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
           <Link 
@@ -91,11 +95,27 @@ function Header() {
         </nav>
         )}
 
-        {/* Right side: Notifications + Login/Avatar - always on right */}
+        {/* Admin Navigation */}
+        {isAdmin && (
+          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
+            <Link 
+              to="/admin/dashboard" 
+              className={`font-medium transition-colors pb-1 ${
+                isActive('/admin/dashboard') || isActive('/users')
+                  ? 'text-on-surface border-b-2 border-secondary' 
+                  : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+            
+            </Link>
+          </nav>
+        )}
+
+        {/* Bên phải: Thông báo + Đăng nhập/Avatar - luôn ở bên phải */}
         <div className="flex items-center gap-4 ml-auto">
           {isAuthenticated && (
             <>
-              {/* Notifications */}
+              {/* Thông báo */}
               <button className="relative p-2 hover:bg-surface-container rounded-lg transition-colors">
                 <span className="material-symbols-outlined text-on-surface-variant">
                   notifications
@@ -106,7 +126,7 @@ function Header() {
           )}
 
           {isAuthenticated ? (
-            /* User Avatar Dropdown */
+            /* Dropdown Avatar người dùng */
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -121,10 +141,10 @@ function Header() {
                 </div>
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Menu dropdown */}
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-outline-variant overflow-hidden">
-                  {/* User Info */}
+                  {/* Thông tin người dùng */}
                   <div className="p-4 border-b border-outline-variant">
                     <p className="font-bold text-on-surface">{user?.name}</p>
                     <p className="text-sm text-on-surface-variant">{user?.email}</p>
@@ -137,7 +157,7 @@ function Header() {
                     </div>
                   </div>
 
-                  {/* Menu Items */}
+                  {/* Các mục menu */}
                   <div className="py-2">
                     {user?.role === 'APPLICANT' && (
                       <Link
@@ -179,7 +199,7 @@ function Header() {
               )}
             </div>
           ) : (
-            /* Login Button */
+            /* Nút đăng nhập */
             <Link
               to="/login"
               className="bg-secondary text-white px-6 py-2 rounded-lg font-semibold hover:bg-on-secondary-container transition-colors"

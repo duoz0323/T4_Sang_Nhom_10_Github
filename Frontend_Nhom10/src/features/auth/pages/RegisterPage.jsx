@@ -96,7 +96,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Hero - Hidden on mobile, shown on lg+ */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden order-2 lg:order-1">
         <BusinessHeroBackground />
@@ -105,9 +105,11 @@ const RegisterPage = () => {
         <div className="relative z-10 h-full w-full flex flex-col p-6 xl:p-8">
           {/* Top Badge - TOP LEFT */}
           <div className="mb-auto">
-            <span className="text-sm font-semibold tracking-widest text-teal-400 uppercase">
-              JobMatch Platform
-            </span>
+            <img 
+              src="/images/logo.png" 
+              alt="TalentLink Logo" 
+              className="h-24 w-auto object-contain"
+            />
           </div>
 
           {/* Main Content - CENTER */}
@@ -161,18 +163,22 @@ const RegisterPage = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col bg-white order-1 lg:order-2 h-screen overflow-y-auto">
+      <div className="w-full lg:w-1/2 flex flex-col bg-white order-1 lg:order-2">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 sm:p-6 lg:p-8 pb-2 shrink-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">JobMatch</h1>
+        <div className="flex justify-center items-center p-4 sm:p-6 lg:p-8 pb-2">
+          <img 
+            src="/images/logo.png" 
+            alt="TalentLink Logo" 
+            className="h-28 w-auto object-contain"
+          />
         </div>
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-1 overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-1">
           <div className="w-full max-w-md mx-auto">{/* Title */}
             <div className="mb-3">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1.5">Tạo tài khoản mới</h2>
               <p className="text-sm text-gray-600">
-                Bắt đầu hành trình chinh phục những nấc thang sự nghiệp danh giá cùng JobMatch.
+                Bắt đầu hành trình chinh phục những nấc thang sự nghiệp danh giá.
               </p>
             </div>
 
@@ -402,7 +408,7 @@ const RegisterPage = () => {
                   <Link to="/privacy" className="text-teal-600 hover:text-teal-700 transition duration-200">
                     Chính sách bảo mật
                   </Link>
-                  {' '}của JobMatch.
+                  {' '}của TalentLink.
                 </label>
               </div>
 

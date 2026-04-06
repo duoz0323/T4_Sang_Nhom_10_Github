@@ -1,1 +1,1 @@
-// Placeholder for components
+// Trình giữ chỗ cho các thành phần

@@ -7,9 +7,13 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Column 1: Logo & Description */}
           <div className="col-span-1">
-            <h3 className="text-2xl font-manrope font-bold text-primary mb-4">JobMatch</h3>
+            <img 
+              src="/images/logo.png" 
+              alt="TalentLink Logo" 
+              className="h-28 w-auto object-contain mb-4"
+            />
             <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-              Đơn vị dẫn đầu trong lĩnh vực tuyển dụng nhân sự cấp cao tại Việt Nam và khu vực Đông Nam Á.
+              Nền tảng Săn đầu người - Kết nối ứng viên chất lượng với các doanh nghiệp hàng đầu tại Việt Nam.
             </p>
             <div className="flex gap-3">
               <button className="w-10 h-10 border border-outline-variant rounded-lg flex items-center justify-center hover:bg-surface-container transition-colors">

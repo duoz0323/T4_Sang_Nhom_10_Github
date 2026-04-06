@@ -8,11 +8,10 @@ function ProfileSidebar() {
   const { user, isApplicant, isCompany } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // Menu items based on role
+  // Các mục menu dựa trên vai trò
   const applicantMenuItems = [
     { path: '/profile', icon: 'person', label: 'Hồ sơ cá nhân' },
-    { path: '/my-jobs', icon: 'work', label: 'Việc làm của tôi' },
-    { path: '/cv-portfolio', icon: 'description', label: 'CV & Portfolio' },
+    { path: '/candidate/cv', icon: 'assignment_turned_in', label: 'Việc làm của tôi' },
     { path: '/settings', icon: 'settings', label: 'Cài đặt' }
   ];
 

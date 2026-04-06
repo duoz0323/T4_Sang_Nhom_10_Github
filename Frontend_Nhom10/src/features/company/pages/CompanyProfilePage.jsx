@@ -5,7 +5,7 @@ import { profileAPI } from '../../../services/api';
 import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import ProfileSidebar from '../../../components/layout/ProfileSidebar';
+import CompanySidebar from '../../../components/layout/CompanySidebar';
 
 function CompanyProfilePage() {
   const { user } = useAuth();
@@ -142,10 +142,7 @@ function CompanyProfilePage() {
         taxCode: formData.taxCode
       };
 
-      const response = await profileAPI.updateCompanyProfile(
-        profile.companyProfileId,
-        updateData
-      );
+      const response = await profileAPI.updateCompanyProfile(updateData);
       
       if (response?.data?.code === 1000) {
         toast.success('Đã lưu thay đổi thành công!');
@@ -189,7 +186,7 @@ function CompanyProfilePage() {
       {/* Main Content with Sidebar */}
       <div className="flex flex-1 pt-16">
         {/* Sidebar */}
-        <ProfileSidebar />
+        <CompanySidebar />
 
         {/* Main Content Area */}
         <main className="flex-1 p-8 bg-surface">
@@ -337,17 +334,21 @@ function CompanyProfilePage() {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {profile.benefits.map(benefit => (
-                  <div key={benefit.id} className="flex gap-4 p-4 bg-surface rounded-lg border border-outline-variant">
-                    <div className="h-12 w-12 rounded-lg bg-secondary-container flex items-center justify-center flex-shrink-0">
-                      <span className="material-symbols-outlined text-secondary">{benefit.icon}</span>
+                {profile?.benefits && profile.benefits.length > 0 ? (
+                  profile.benefits.map(benefit => (
+                    <div key={benefit.id} className="flex gap-4 p-4 bg-surface rounded-lg border border-outline-variant">
+                      <div className="h-12 w-12 rounded-lg bg-secondary-container flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-secondary">{benefit.icon}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-on-surface">{benefit.title}</p>
+                        <p className="text-xs text-on-surface-variant mt-1">{benefit.description}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-on-surface">{benefit.title}</p>
-                      <p className="text-xs text-on-surface-variant mt-1">{benefit.description}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="col-span-full text-on-surface-variant text-center py-4">Chưa thêm phúc lợi nào</p>
+                )}
               </div>
             </section>
 

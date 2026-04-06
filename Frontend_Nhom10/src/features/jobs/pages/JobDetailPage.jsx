@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { jobAPI } from '../../../services/api';
-import { ensureAuthenticated } from '../../../services/guestAuth';
 import { useAuth } from '../../../contexts/AuthContext';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
@@ -24,41 +24,41 @@ const JobDetailPage = () => {
 
   useEffect(() => {
     fetchJobDetail();
-    if (isAuthenticated && userRole === 'CANDIDATE') {
+    if (isAuthenticated && (userRole === 'APPLICANT' || userRole === 'CANDIDATE')) {
       checkIfSaved();
     }
   }, [id, isAuthenticated]);
 
   const fetchJobDetail = async () => {
     try {
-      await ensureAuthenticated(); // Ensure token before API call
+      // ✅ KHÔNG CẦN ensureAuthenticated() - /posts/{id} là PUBLIC endpoint
       const response = await jobAPI.getJobById(id);
       console.log('📋 Job detail response:', response);
-      
+
       if (response?.data?.result) {
         const jobData = response.data.result;
         console.log('✅ Job data:', jobData);
-        
-        // Map backend data structure to frontend
+
+        // Ánh xạ cấu trúc dữ liệu backend sang frontend
         const mappedJob = {
           jobPostingId: jobData.jobPostingId,
           title: jobData.title,
-          companyName: jobData.companyProfile?.companyName || 'Company',
-          companyLogo: jobData.companyProfile?.logo || 'https://via.placeholder.com/64',
-          companyInfo: jobData.companyProfile?.description || 'Thông tin công ty',
+          companyName: jobData.companyProfile?.companyName || 'Công ty tuyển dụng',
+          companyLogo: jobData.companyProfile?.avatar || 'https://via.placeholder.com/64',
+          companyInfo: jobData.companyProfile?.address || 'Thông tin công ty',
           salaryMin: jobData.salaryRequire || 0,
           salaryMax: jobData.salaryRequire ? jobData.salaryRequire * 1.2 : 0,
-          location: jobData.locations?.map(l => l.city).join(', ') || 'Chưa xác định',
-          industry: jobData.industry?.name || 'Chưa xác định',
+          location: jobData.locations?.map(l => l.name || l.city || l.province).filter(Boolean).join(', ') || 'Chưa xác định',
+          industry: jobData.industry?.name || jobData.industry?.nameIndustry || 'Chưa xác định',
           deadline: jobData.deadline || 'N/A',
           level: 'Cấp quản lý', // Default as not in BE
-          description: jobData.description,
+          description: jobData.description || 'Phụ trách tuyển dụng nhân sự',
           requirements: jobData.skills?.map(skill => ({
             icon: 'verified',
-            title: skill.name,
-            desc: `Yêu cầu về ${skill.name}`
+            title: skill.name || skill.skillName,
+            desc: `Yêu cầu về ${skill.name || skill.skillName}`
           })) || [],
-          image: jobData.companyProfile?.banner || 'https://via.placeholder.com/1200x400',
+          image: jobData.companyProfile?.avatar || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=400&fit=crop',
           status: jobData.status
         };
         
@@ -89,29 +89,41 @@ const JobDetailPage = () => {
 
   const toggleSaveJob = async () => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để lưu công việc');
+      toast.error('Vui lòng đăng nhập để lưu công việc');
       navigate('/login');
       return;
     }
 
-    if (userRole !== 'CANDIDATE') {
-      alert('Chỉ ứng viên mới có thể lưu công việc');
+    // ✅ Backend trả về role là "APPLICANT" không phải "CANDIDATE"
+    if (userRole !== 'APPLICANT' && userRole !== 'CANDIDATE') {
+      toast.error('Chỉ ứng viên mới có thể lưu công việc');
       return;
     }
 
     try {
+      console.log('💾 Toggling save job:', id, 'Current state:', isSaved);
+
       if (isSaved) {
+        console.log('🔓 Removing from saved jobs');
         await jobAPI.unsaveJob(id);
         setIsSaved(false);
-        alert('Đã bỏ lưu công việc');
+        toast.success('Đã bỏ lưu công việc');
       } else {
+        console.log('🔖 Adding to saved jobs');
         await jobAPI.saveJob(id);
         setIsSaved(true);
-        alert('Đã lưu công việc thành công');
+        toast.success('Đã lưu công việc thành công');
       }
     } catch (err) {
       console.error('❌ Error toggling save:', err);
-      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+      // Nếu tính năng chưa được thực hiện trong backend, chỉ hiển thị thông báo
+      if (err.response?.status === 404 || err.message?.includes('not implemented')) {
+        console.warn('⚠️ Save jobs feature not yet implemented in backend');
+        // Theo tùy chọn vẫn chuyển đổi trạng thái UI cục bộ
+        setIsSaved(!isSaved);
+      } else {
+        toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+      }
     }
   };
 
@@ -131,48 +143,64 @@ const JobDetailPage = () => {
           ...prev,
           cv: file
         }));
+        toast.success(`Đã chọn file: ${file.name}`);
       } else {
-        alert('File quá lớn. Vui lòng chọn file dưới 10MB');
+        toast.error('File quá lớn. Vui lòng chọn file dưới 10MB');
       }
     } else {
-      alert('Vui lòng chọn file PDF hoặc DOCX');
+      toast.error('Vui lòng chọn file PDF hoặc DOCX');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // 🔐 Validation Layer
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để ứng tuyển');
+      toast.error('Vui lòng đăng nhập để ứng tuyển');
       navigate('/login');
       return;
     }
 
-    if (userRole !== 'CANDIDATE') {
-      alert('Chỉ ứng viên mới có thể ứng tuyển');
+    // ✅ Backend trả về role là "APPLICANT" không phải "CANDIDATE"
+    if (userRole !== 'APPLICANT' && userRole !== 'CANDIDATE') {
+      toast.error('Chỉ ứng viên mới có thể ứng tuyển');
       return;
     }
 
-    if (!formData.fullName || !formData.email || !formData.cv) {
-      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+    if (!formData.fullName?.trim() || !formData.email?.trim() || !formData.phone?.trim() || !formData.cv) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Email không hợp lệ');
       return;
     }
 
     setIsApplying(true);
-    
-    try {
-      const applicationData = new FormData();
-      applicationData.append('postId', id);
-      applicationData.append('fullName', formData.fullName);
-      applicationData.append('email', formData.email);
-      applicationData.append('phone', formData.phone || '');
-      applicationData.append('coverLetter', formData.coverLetter || '');
-      applicationData.append('cv', formData.cv);
 
-      const response = await jobAPI.applyJob(id, applicationData);
-      
-      if (response?.data?.code === 1000) {
-        alert('Đơn ứng tuyển đã được gửi thành công!');
+    try {
+      console.log('📤 Submitting application for job:', id);
+
+      // ✅ Correct API call format - PHONE là REQUIRED
+      const applicationData = {
+        name: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() // ✅ Phone bắt buộc
+      };
+
+      const response = await jobAPI.applyJob(id, applicationData, formData.cv);
+
+      console.log('✅ Application response:', response);
+
+      if (response?.data?.code === 1000 || response?.data?.result) {
+        toast.success('Đơn ứng tuyển đã được gửi thành công!', {
+          description: 'Nhà tuyển dụng sẽ xem xét hồ sơ của bạn trong thời gian sớm nhất.',
+          duration: 5000,
+        });
         // Reset form
         setFormData({
           fullName: '',
@@ -181,13 +209,21 @@ const JobDetailPage = () => {
           coverLetter: '',
           cv: null
         });
+        // Clear file input
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = '';
       } else {
-        alert(response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+        const errorMsg = response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+        console.error('❌ Application error:', errorMsg);
+        toast.error(errorMsg);
       }
     } catch (err) {
-      console.error('❌ Error applying:', err);
-      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
-      alert(errorMessage);
+      console.error('❌ Error applying job:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
+      toast.error('Gửi đơn ứng tuyển thất bại', {
+        description: errorMessage,
+        duration: 5000,
+      });
     } finally {
       setIsApplying(false);
     }
@@ -235,11 +271,11 @@ const JobDetailPage = () => {
         `}
       </style>
 
-      {/* Header */}
+      {/* Tiêu đề */}
       <Header />
-      
-      <main className="pb-16 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
-        {/* Back Button */}
+
+      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
+        {/* Nút quay lại */}
         <div className="mb-8">
           <button 
             onClick={() => navigate('/jobs')}
@@ -250,10 +286,10 @@ const JobDetailPage = () => {
           </button>
         </div>
 
-        {/* Main Content Container */}
+        {/* Vùng chứa nội dung chính */}
         <div className="bg-white rounded-2xl border border-surface-container shadow-[0_32px_64px_-16px_rgba(0,32,69,0.08)] overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12">
-            {/* Details Column */}
+            {/* Cột chi tiết */}
             <div className="lg:col-span-8 p-6 md:p-8 lg:border-r border-surface-container">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
                 <div>
@@ -293,16 +329,16 @@ const JobDetailPage = () => {
               </div>
 
               <div className="space-y-8">
-                {/* Image */}
+                {/* Hình ảnh */}
                 <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-xl ring-1 ring-black/5">
-                  <img 
-                    alt={job.title} 
-                    className="w-full h-full object-cover" 
+                  <img
+                    alt={job.title}
+                    className="w-full h-full object-cover"
                     src={job.image}
                   />
                 </div>
 
-                {/* Job Description */}
+                {/* Mô tả công việc */}
                 <section>
                   <h2 className="font-headline text-xl font-bold text-primary mb-6 flex items-center gap-3">
                     <span className="w-2 h-8 bg-secondary rounded-full"></span>
@@ -313,7 +349,7 @@ const JobDetailPage = () => {
                   </div>
                 </section>
 
-                {/* Requirements */}
+                {/* Yêu cầu */}
                 <section>
                   <h2 className="font-headline text-xl font-bold text-primary mb-6 flex items-center gap-3">
                     <span className="w-2 h-8 bg-secondary rounded-full"></span>
@@ -334,10 +370,10 @@ const JobDetailPage = () => {
               </div>
             </div>
 
-            {/* Sidebar Form Column */}
+            {/* Phần biểu mẫu cột */}
             <aside className="lg:col-span-4 bg-surface-container-lowest p-6 md:p-8">
               <div className="sticky top-24">
-                {/* Summary Info */}
+                {/* Thông tin tóm tắt */}
                 <div className="mb-10 p-6 bg-white rounded-xl border border-surface-container shadow-sm">
                   <h3 className="font-headline text-lg font-bold text-primary mb-6 pb-4 border-b border-surface-container">
                     Thông tin tóm tắt
@@ -353,7 +389,7 @@ const JobDetailPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-on-surface-variant">Địa điểm:</dt>
-                      <dd className="font-bold text-primary">{job.location.split(' ')[0]}</dd>
+                      <dd className="font-bold text-primary">{job.location}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-on-surface-variant">Hạn nộp:</dt>
@@ -362,7 +398,7 @@ const JobDetailPage = () => {
                   </dl>
                 </div>
 
-                {/* Application Form */}
+                {/* Biểu mẫu ứng tuyển */}
                 <div className="bg-white p-6 rounded-xl border border-surface-container shadow-xl">
                   <h3 className="font-headline text-xl font-bold text-primary mb-2">Ứng tuyển ngay</h3>
                   <p className="text-on-surface-variant text-sm mb-8 font-label">
@@ -373,12 +409,12 @@ const JobDetailPage = () => {
                       <label className="block text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant mb-2">
                         Họ và Tên
                       </label>
-                      <input 
+                      <input
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
-                        className="w-full bg-surface-container-low border border-surface-container focus:border-secondary focus:ring-0 focus:bg-white transition-all px-4 py-3 rounded-xl" 
-                        placeholder="Nguyễn Văn A" 
+                        className="w-full bg-surface-container-low border border-surface-container focus:border-secondary focus:ring-0 focus:bg-white transition-all px-4 py-3 rounded-xl"
+                        placeholder="Nguyễn Văn A"
                         type="text"
                         required
                       />
@@ -387,13 +423,27 @@ const JobDetailPage = () => {
                       <label className="block text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant mb-2">
                         Địa chỉ Email
                       </label>
-                      <input 
+                      <input
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full bg-surface-container-low border border-surface-container focus:border-secondary focus:ring-0 focus:bg-white transition-all px-4 py-3 rounded-xl" 
-                        placeholder="a.nguyen@example.com" 
+                        className="w-full bg-surface-container-low border border-surface-container focus:border-secondary focus:ring-0 focus:bg-white transition-all px-4 py-3 rounded-xl"
+                        placeholder="a.nguyen@example.com"
                         type="email"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant mb-2">
+                        Số điện thoại
+                      </label>
+                      <input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-surface-container focus:border-secondary focus:ring-0 focus:bg-white transition-all px-4 py-3 rounded-xl"
+                        placeholder="0912345678"
+                        type="tel"
                         required
                       />
                     </div>
@@ -402,8 +452,8 @@ const JobDetailPage = () => {
                         Hồ sơ / CV
                       </label>
                       <label className="w-full border-2 border-dashed border-outline-variant rounded-xl p-6 text-center hover:border-secondary hover:bg-secondary/5 transition-all cursor-pointer group block">
-                        <input 
-                          type="file" 
+                        <input
+                          type="file"
                           accept=".pdf,.docx"
                           onChange={handleFileChange}
                           className="hidden"
@@ -417,7 +467,7 @@ const JobDetailPage = () => {
                         <p className="text-[10px] text-on-surface-variant mt-1">Dung lượng tối đa 10MB</p>
                       </label>
                     </div>
-                    <button 
+                    <button
                       type="submit"
                       className="w-full bg-secondary text-on-secondary py-3 rounded-xl font-headline font-bold text-base hover:bg-on-secondary-container transition-all active:scale-[0.98] shadow-lg shadow-secondary/25"
                     >
@@ -433,7 +483,7 @@ const JobDetailPage = () => {
                   </form>
                 </div>
 
-                {/* Company Info */}
+                {/* Thông tin công ty */}
                 <div className="mt-8 p-6 bg-primary rounded-xl text-white">
                   <h4 className="font-bold mb-2">Về {job.companyName}</h4>
                   <p className="text-xs text-white/70 leading-relaxed mb-4">
@@ -450,7 +500,7 @@ const JobDetailPage = () => {
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Chân trang */}
       <Footer />
     </div>
   );

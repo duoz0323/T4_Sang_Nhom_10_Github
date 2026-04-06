@@ -2,17 +2,22 @@ import { Toaster } from "sonner";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { AuthProvider } from "./contexts/AuthContext";
 import ScrollToTop from "./components/common/ScrollToTop";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 import LoginPage from "./features/auth/pages/LoginPage.jsx";
 import RegisterPage from "./features/auth/pages/RegisterPage.jsx";
 import UsersManagementPage from "./features/admin/pages/UsersManagementPage.jsx";
 import HomePage from "./features/home/pages/HomePage.jsx";
 import JobListPage from "./features/jobs/pages/JobListPage.jsx";
 import JobDetailPage from "./features/jobs/pages/JobDetailPage.jsx";
+import CompanyListPage from "./features/companies/pages/CompanyListPage.jsx";
+import CompanyDetailPage from "./features/companies/pages/CompanyDetailPage.jsx";
 import ProfilePage from "./features/profile/pages/ProfilePage.jsx";
+import MyJobsPage from "./features/profile/pages/MyJobsPage.jsx";
 import SettingsPage from "./features/settings/pages/SettingsPage.jsx";
 import CompanyDashboard from "./features/company/pages/CompanyDashboard.jsx";
 import CompanyProfilePage from "./features/company/pages/CompanyProfilePage.jsx";
 import CompanySettingsPage from "./features/company/pages/CompanySettingsPage.jsx";
+import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePage.jsx";
 import './App.css'
 
 function App() {
@@ -30,17 +35,92 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/jobs" element={<JobListPage />} />
           <Route path="/jobs/:id" element={<JobDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/companies" element={<CompanyListPage />} />
+          <Route path="/companies/:id" element={<CompanyDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/users" element={<UsersManagementPage />} />
-          <Route path="/company/dashboard" element={<CompanyDashboard />} />
-          <Route path="/company/profile" element={<CompanyProfilePage />} />
-          <Route path="/company/settings" element={<CompanySettingsPage />} />
+          
+          {/* Candidate Routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute requiredRole="APPLICANT">
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-jobs"
+            element={
+              <ProtectedRoute requiredRole="APPLICANT">
+                <MyJobsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/candidate/cv"
+            element={
+              <ProtectedRoute requiredRole="APPLICANT">
+                <CandidateProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute requiredRole="APPLICANT">
+                <SettingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Company Routes */}
+          <Route 
+            path="/company/dashboard" 
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanyDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/company/profile" 
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanyProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/company/settings" 
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanySettingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <UsersManagementPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/users" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <UsersManagementPage />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

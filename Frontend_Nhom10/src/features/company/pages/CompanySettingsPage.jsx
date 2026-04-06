@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-import ProfileSidebar from '../../../components/layout/ProfileSidebar';
+import CompanySidebar from '../../../components/layout/CompanySidebar';
 
 function CompanySettingsPage() {
-  // State management
+  // Quản lý trạng thái
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -20,7 +20,7 @@ function CompanySettingsPage() {
 
   const [profileVisibility, setProfileVisibility] = useState('public');
 
-  // Event handlers
+  // Trình xử lý sự kiện
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
@@ -80,24 +80,24 @@ function CompanySettingsPage() {
         `}
       </style>
 
-      {/* Header */}
+      {/* Tiêu đề */}
       <Header />
 
-      {/* Main Content with Sidebar */}
+      {/* Nội dung chính với thanh bên */}
       <div className="flex flex-1 pt-16">
-        {/* Sidebar */}
-        <ProfileSidebar />
+        {/* Thanh bên */}
+        <CompanySidebar />
 
-        {/* Main Content Area */}
+        {/* Vùng nội dung chính */}
         <main className="flex-1 p-8 bg-surface">
           <div className="max-w-5xl mx-auto space-y-8">
-            {/* Page Title */}
+            {/* Tiêu đề trang */}
             <div>
               <h1 className="text-3xl font-manrope font-extrabold text-primary">Cài đặt</h1>
               <p className="text-on-surface-variant mt-2">Quản lý tài khoản và cài đặt bảo mật của bạn</p>
             </div>
 
-            {/* Change Password Section */}
+            {/* Phần đổi mật khẩu */}
             <section className="bg-white border border-outline-variant rounded-xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center">
@@ -158,7 +158,7 @@ function CompanySettingsPage() {
               </form>
             </section>
 
-            {/* Notifications Section */}
+            {/* Phần thông báo */}
             <section className="bg-white border border-outline-variant rounded-xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center">
@@ -170,7 +170,7 @@ function CompanySettingsPage() {
                 </div>
               </div>
               <div className="space-y-6">
-                {/* Email Alerts */}
+                {/* Cảnh báo Email */}
                 <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
@@ -195,7 +195,7 @@ function CompanySettingsPage() {
                   </button>
                 </div>
 
-                {/* Push Notifications */}
+                {/* Thông báo Push */}
                 <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center">
@@ -220,7 +220,7 @@ function CompanySettingsPage() {
                   </button>
                 </div>
 
-                {/* SMS Notifications */}
+                {/* Thông báo SMS */}
                 <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-tertiary-container rounded-lg flex items-center justify-center">
@@ -247,7 +247,7 @@ function CompanySettingsPage() {
               </div>
             </section>
 
-            {/* Privacy Section */}
+            {/* Phần quyền riêng tư */}
             <section className="bg-white border border-outline-variant rounded-xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-error-container rounded-lg flex items-center justify-center">
@@ -293,7 +293,7 @@ function CompanySettingsPage() {
         </main>
       </div>
 
-      {/* Footer */}
+      {/* Chân trang */}
       <Footer />
     </div>
   );

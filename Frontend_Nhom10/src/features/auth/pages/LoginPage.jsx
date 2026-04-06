@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, User, AlertCircle } from 'lucide-react';
 import BusinessHeroBackground from '../components/BusinessHeroBackground';
 import authService from '../services/authService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -20,45 +22,46 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      // Try both candidate and company login
-      const [candidateResult, companyResult] = await Promise.allSettled([
-        authService.loginCandidate(formData.email, formData.password),
-        authService.loginCompany(formData.email, formData.password)
-      ]);
+      let result;
       
-      // Check which one succeeded
-      let result = null;
+      // Auto-detect role: Try candidate first, then company
+      // Backend will return correct role in token
+      result = await authService.loginCandidate(formData.email, formData.password);
       
-      if (candidateResult.status === 'fulfilled' && candidateResult.value.success) {
-        result = candidateResult.value;
-      } else if (companyResult.status === 'fulfilled' && companyResult.value.success) {
-        result = companyResult.value;
+      // If candidate login fails, try company login
+      if (!result.success) {
+        console.log('🔄 Candidate login failed, trying company...');
+        result = await authService.loginCompany(formData.email, formData.password);
       }
       
-      if (result) {
-        // Wait a bit for localStorage to be updated
-        await new Promise(resolve => setTimeout(resolve, 100));
+      if (result.success) {
+        // Get user data from localStorage (already saved by authService)
+        const user = authService.getCurrentUser();
         
-        // Get user from localStorage to check role
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        
-        console.log('✅ Login successful! User:', user);
-        
-        // Redirect based on role
-        if (user?.role === 'ADMIN') {
-          window.location.href = '/users'; // Admin dashboard
-        } else if (user?.role === 'COMPANY') {
-          window.location.href = '/company/dashboard'; // Company dashboard
+        // Update AuthContext
+        if (user) {
+          login(user);
+          
+          // Redirect based on actual role from user object (not context)
+          let homePath = '/';
+          if (user.role === 'ADMIN') {
+            homePath = '/admin/dashboard';
+          } else if (user.role === 'COMPANY') {
+            homePath = '/company/dashboard';
+          } // APPLICANT/CANDIDATE → '/'
+          
+          console.log('🏠 Redirecting to:', homePath, '- Role:', user.role);
+          navigate(homePath, { replace: true });
         } else {
-          window.location.href = '/'; // Applicant homepage
+          // Fallback redirect
+          navigate('/', { replace: true });
         }
       } else {
-        setError('Email hoặc mật khẩu không đúng');
+        setError(result.message || 'Email hoặc mật khẩu không đúng.');
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
+      console.error('LoginPage error:', err);
+      setError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -74,20 +77,24 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 bg-white order-2 lg:order-1 h-screen overflow-y-auto">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 bg-white order-2 lg:order-1">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">JobMatch</h1>
+          <div className="mb-6 sm:mb-8 flex justify-center">
+            <img 
+              src="/images/logo.png" 
+              alt="TalentLink Logo" 
+              className="h-28 w-auto object-contain"
+            />
           </div>
 
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Chào mừng trở lại</h2>
             <p className="text-sm sm:text-base text-gray-600">
-              Tiếp tục hành trình chinh phục những nấc thang sự nghiệp danh giá cùng JobMatch.
+              Tiếp tục hành trình chinh phục những nấc thang sự nghiệp danh giá cùng TalentLink.
             </p>
           </div>
 

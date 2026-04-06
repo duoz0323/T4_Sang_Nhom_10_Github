@@ -1,30 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { jobAPI, locationAPI, industryAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
-import { ensureAuthenticated } from '../../../services/guestAuth';
+import { MOCK_LOCATIONS, MOCK_INDUSTRIES } from '../../../constants';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
-
-// Mock data for public homepage (when not logged in)
-const MOCK_LOCATIONS = [
-  { id: 1, city: 'Hồ Chí Minh' },
-  { id: 2, city: 'Hà Nội' },
-  { id: 3, city: 'Đà Nẵng' },
-  { id: 4, city: 'Cần Thơ' },
-  { id: 5, city: 'Hải Phòng' },
-];
-
-const MOCK_INDUSTRIES = [
-  { industryId: 1, nameIndustry: 'Công nghệ thông tin' },
-  { industryId: 2, nameIndustry: 'Marketing' },
-  { industryId: 3, nameIndustry: 'Kinh doanh / Bán hàng' },
-  { industryId: 4, nameIndustry: 'Tài chính - Ngân hàng' },
-  { industryId: 5, nameIndustry: 'Giáo dục - Đào tạo' },
-  { industryId: 6, nameIndustry: 'Nhân sự' },
-  { industryId: 7, nameIndustry: 'Thiết kế đồ họa' },
-  { industryId: 8, nameIndustry: 'Xây dựng' },
-];
 
 const MOCK_JOBS = [
   {
@@ -76,80 +56,115 @@ const MOCK_JOBS = [
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Changed to false
   const [error, setError] = useState(null);
-  
-  // Search state
+
+  // Trạng thái tìm kiếm
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [searchIndustry, setSearchIndustry] = useState('');
-  const [locations, setLocations] = useState(MOCK_LOCATIONS);
-  const [industries, setIndustries] = useState(MOCK_INDUSTRIES);
+  const [locations, setLocations] = useState([]);
+  const [industries, setIndustries] = useState([]);
+  const [filtersLoading, setFiltersLoading] = useState(false); // Changed to false
 
-  // Fetch locations and industries
+  // Lấy địa điểm và ngành nghề (từ cache trước)
   useEffect(() => {
     const fetchData = async () => {
+      // Check cache first
+      const cachedLocations = sessionStorage.getItem('locations');
+      const cachedIndustries = sessionStorage.getItem('industries');
+      
+      if (cachedLocations && cachedIndustries) {
+        // Load from cache immediately
+        setLocations(JSON.parse(cachedLocations));
+        setIndustries(JSON.parse(cachedIndustries));
+        setFiltersLoading(false);
+        return;
+      }
+      
+      setFiltersLoading(true);
       try {
-        const hasAuth = await ensureAuthenticated();
-        if (!hasAuth) {
-          setLocations(MOCK_LOCATIONS);
-          setIndustries(MOCK_INDUSTRIES);
-          return;
-        }
-
         const [locationsRes, industriesRes] = await Promise.all([
-          locationAPI.getAll(),
-          industryAPI.getAll()
+          locationAPI.getAll().catch(() => ({ data: { code: 1000, result: MOCK_LOCATIONS } })),
+          industryAPI.getAll().catch(() => ({ data: { code: 1000, result: MOCK_INDUSTRIES } }))
         ]);
 
         if (locationsRes?.data?.code === 1000 && locationsRes?.data?.result) {
-          setLocations(locationsRes.data.result);
-        } else {
-          setLocations(MOCK_LOCATIONS);
+          const locs = locationsRes.data.result;
+          setLocations(locs);
+          sessionStorage.setItem('locations', JSON.stringify(locs));
         }
 
         if (industriesRes?.data?.code === 1000 && industriesRes?.data?.result) {
-          setIndustries(industriesRes.data.result);
-        } else {
-          setIndustries(MOCK_INDUSTRIES);
+          const inds = industriesRes.data.result;
+          setIndustries(inds);
+          sessionStorage.setItem('industries', JSON.stringify(inds));
         }
       } catch (err) {
-        console.error('API Error:', err.message);
+        console.error('❌ Error fetching filter data:', err);
+        // Fallback to MOCK when error is thrown directly
         setLocations(MOCK_LOCATIONS);
         setIndustries(MOCK_INDUSTRIES);
+      } finally {
+        setFiltersLoading(false);
       }
     };
     fetchData();
   }, []);
 
   const handleSearch = () => {
-    // TODO: Implement search functionality
+    // Xây dựng các tham số truy vấn cho tìm kiếm công việc
+    const params = new URLSearchParams();
+    if (searchKeyword) params.append('keyword', searchKeyword);
+    if (searchLocation) {
+      const location = locations.find(loc => loc.city === searchLocation);
+      if (location) params.append('locationId', location.id);
+    }
+    if (searchIndustry) {
+      const industry = industries.find(ind => ind.nameIndustry === searchIndustry);
+      if (industry) params.append('industryId', industry.industryId);
+    }
+
+    // Chuyển hướng đến trang công việc với bộ lọc
+    navigate(`/jobs${params.toString() ? '?' + params.toString() : ''}`);
   };
 
   useEffect(() => {
     const fetchJobs = async () => {
+      // Check cache first for instant display
+      const cachedJobs = sessionStorage.getItem('homepage_top_jobs');
+      if (cachedJobs) {
+        setJobs(JSON.parse(cachedJobs));
+      }
+      
       setLoading(true);
 
       try {
-        const hasAuth = await ensureAuthenticated();
-        if (!hasAuth) {
-          throw new Error('Could not authenticate');
-        }
-
-        // ✅ Gọi API GET /posts/public
-        const response = await jobAPI.getAllActiveJobs();
+        // Lấy thêm công việc để có top 3 mức lương cao nhất
+        const response = await jobAPI.getAllActiveJobs({ page: 0, size: 20 });
 
         if (response?.data?.code === 1000 && response?.data?.result) {
           const jobsData = response.data.result;
-          setJobs(jobsData.slice(0, 6)); // Show first 6 jobs on homepage
+
+          // Sắp xếp theo mức lương (cao nhất trước) và lấy top 3
+          const sortedJobs = [...jobsData].sort((a, b) => {
+            const salaryA = a.salaryRequire || 0;
+            const salaryB = b.salaryRequire || 0;
+            return salaryB - salaryA;
+          });
+
+          const topJobs = sortedJobs.slice(0, 3);
+          setJobs(topJobs);
+          sessionStorage.setItem('homepage_top_jobs', JSON.stringify(topJobs));
           setError(null);
         } else {
           setError('Không thể tải dữ liệu công việc');
-          setJobs([]);
+          if (!cachedJobs) setJobs([]);
         }
       } catch (err) {
-        console.error('Error fetching jobs:', err.message);
+        console.error('❌ Error fetching jobs:', err);
         setError('Có lỗi xảy ra khi tải dữ liệu');
         setJobs([]);
       } finally {
@@ -185,11 +200,20 @@ const HomePage = () => {
 
   const formatSalary = (salaryRequire) => {
     if (!salaryRequire) return 'Thỏa thuận';
-    return `${salaryRequire.toLocaleString()} VNĐ`;
+      
+      let min = salaryRequire;
+      if (min > 0 && min < 1000) {
+        min = min * 1000000;
+      } else if (min >= 1000 && min < 1000000) {
+        min = min * 1000;
+      }
+
+      const max = min * 1.5;
+      return `${(min / 1000000).toFixed(0)} - ${(max / 1000000).toFixed(0)} triệu`;
   };
 
   const getCompanyName = (job) => {
-    // Backend has job.companyProfile.companyName
+    // Backend có job.companyProfile.companyName
     return job?.companyProfile?.companyName || 'Company';
   };
 
@@ -199,7 +223,7 @@ const HomePage = () => {
   };
 
   const getSkills = (job) => {
-    // Backend structure: job.skills (array of SkillResponse)
+    // Cấu trúc backend: job.skills (mảng SkillResponse)
     if (!job?.skills || job.skills.length === 0) return [];
     return job.skills.map(skill => skill.skillName);
   };
@@ -210,7 +234,7 @@ const HomePage = () => {
       <Header />
 
       <main className="pt-16 flex-1">
-        {/* Hero Section */}
+        {/* Phần Hero */}
         <section className="relative min-h-[670px] flex items-center overflow-hidden bg-primary-container">
           <div className="absolute inset-0 opacity-40">
             <img className="w-full h-full object-cover" alt="Modern high-end office interior with glass walls and professional atmosphere at twilight with soft blue and teal lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwHEMTNrS-jAJNuHkwPB3MOICE6iPEc7qfmlm9SMkI8pHo6XLPvPSamT9k8IC6HC1x-IA7oRs_lja7poLVwWNFFBaIoRDHU-c7XjKilsJrvZ2wMD2zsUeB50otL5PTQCfPkxfeFw8qDm61Xk24fkwUq4L_WXJH6-tw-D8kBsN2O7fYlpzv9zqtx6_7ufOd30hTVmXK6p4lINX9NWyEIVupiGtW2giUq__SPslL7megVTAlV1tK4kxzvGslWBbW9JIOLJWYoHoOVq5s" />
@@ -232,9 +256,9 @@ const HomePage = () => {
                 Kết nối những nhà lãnh đạo xuất sắc với những cơ hội nghề nghiệp đẳng cấp nhất tại Việt Nam và khu vực.
               </p>
 
-              {/* Quick Search Bar (Integrated in Hero) */}
+              {/* Thanh tìm kiếm nhanh (Tích hợp trong Hero) */}
               <div className="bg-surface-container-lowest/95 backdrop-blur-md p-2 rounded-xl shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl">
-                {/* Keyword Input */}
+                {/* Nhập từ khóa */}
                 <div className="flex-1 relative">
                   <div className="flex items-center px-4 py-2.5 gap-3 border-r border-outline-variant/20">
                     <span className="material-symbols-outlined text-outline">work</span>
@@ -243,7 +267,7 @@ const HomePage = () => {
                       value={searchKeyword}
                       onChange={(e) => setSearchKeyword(e.target.value)}
                     >
-                      <option value="">Chức danh, kỹ năng...</option>
+                      <option value="">Ngành nghề</option>
                       {industries.map((industry) => (
                         <option key={industry.industryId} value={industry.nameIndustry}>{industry.nameIndustry}</option>
                       ))}
@@ -251,16 +275,17 @@ const HomePage = () => {
                   </div>
                 </div>
 
-                {/* Location Select */}
+                {/* Chọn địa điểm */}
                 <div className="flex-1 relative">
                   <div className="flex items-center px-4 py-2.5 gap-3">
                     <span className="material-symbols-outlined text-outline">location_on</span>
-                    <select 
-                      className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium outline-none cursor-pointer" 
+                    <select
+                      className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium outline-none cursor-pointer"
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
+                      disabled={filtersLoading}
                     >
-                      <option value="">Thành phố</option>
+                      <option value="">{filtersLoading ? 'Đang tải...' : 'Thành phố'}</option>
                       {locations.map((loc) => (
                         <option key={loc.id} value={loc.city}>{loc.city}</option>
                       ))}
@@ -268,7 +293,7 @@ const HomePage = () => {
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={handleSearch}
                   className="bg-secondary text-on-secondary px-8 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-on-secondary-container transition-all"
                 >
@@ -306,7 +331,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Hot Industries (Bento Grid Style) */}
+        {/* Ngành nghề nổi bật (Kiểu Bento Grid) */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
             <div className="max-w-xl">
@@ -314,13 +339,13 @@ const HomePage = () => {
               <h2 className="text-2xl font-black font-headline mt-2 text-primary tracking-tight">Khám phá các lĩnh vực dẫn đầu thị trường</h2>
             </div>
             <button className="group flex items-center gap-2 text-on-surface font-bold text-sm hover:text-secondary transition-colors">
-              Xem tất cả ngành nghề 
+              Xem tất cả ngành nghề
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {/* IT Industry */}
+            {/* Ngành IT */}
             <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
               <div className="relative h-56 rounded-2xl overflow-hidden bg-slate-900">
                 <img className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="High tech digital circuit board background with glowing teal and blue binary data patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-1_uc3ziR2-N10mmQiR4p5f4ESrarnRbKPh0UW6n8EqhG8g1NRcuZnJniDwhAinC6ZLP3w6ggiHDXlSq7CmIeCkLf_pf6svN4rYGl2mhF_FDXSTUlwsAIJoKej4AvB_ThdEj2iq-m3l5LG0Da1Y9nY5Jp3jZy1RIXzhJt4Y4z3i-6rvA9cFQVF3W1qUT_316K3ajeDIBjsWAxWwgTbYQHxno33-A6uU99UeSV_uSszs1LagLTX2yTntvS4xPQdBggXemmivL-frSr" />
@@ -389,7 +414,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Featured Jobs */}
+        {/* Công việc nổi bật */}
         <section className="py-16 bg-surface-container-low">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10 space-y-3">
@@ -399,7 +424,7 @@ const HomePage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading ? (
-                // Loading skeleton
+                // Bộ xương tải
                 [...Array(3)].map((_, index) => (
                   <div key={index} className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
                     <div className="flex justify-between items-start mb-6">
@@ -416,18 +441,18 @@ const HomePage = () => {
                   </div>
                 ))
               ) : error ? (
-                // Error state
+                // Trạng thái lỗi
                 <div className="col-span-full text-center py-12">
                   <p className="text-outline mb-4">Không thể tải danh sách việc làm</p>
                   <p className="text-sm text-on-surface-variant">{error}</p>
                 </div>
               ) : jobs.length === 0 ? (
-                // Empty state
+                // Trạng thái rỗng
                 <div className="col-span-full text-center py-12">
                   <p className="text-outline">Chưa có việc làm nào</p>
                 </div>
               ) : (
-                // Job cards with real data
+                // Thẻ công việc với dữ liệu thực
                 jobs.map((job, index) => (
                   <Link 
                     key={job.jobPostingId} 
@@ -491,7 +516,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Newsletter / CTA */}
+        {/* Bản tin / CTA */}
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto bg-primary-container rounded-2xl p-10 md:p-16 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
@@ -509,7 +534,7 @@ const HomePage = () => {
         </section>
       </main>
 
-      {/* Footer */}
+      {/* Chân trang */}
       <Footer />
     </div>
   );

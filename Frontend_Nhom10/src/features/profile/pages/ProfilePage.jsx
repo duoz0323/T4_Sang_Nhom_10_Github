@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { profileAPI } from '../../../services/api';
-import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import ProfileSidebar from '../../../components/layout/ProfileSidebar';
 
 function ProfilePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -24,20 +24,24 @@ function ProfilePage() {
   });
 
   useEffect(() => {
-    fetchProfile();
+    if (user) {
+      fetchProfile();
+    } else {
+      toast.error('Vui lòng đăng nhập để xem hồ sơ');
+      navigate('/login');
+    }
   }, [user]);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      await ensureAuthenticated(); // Ensure token before API call
-      console.log('🔄 Fetching candidate profile...');
+
       const response = await profileAPI.getMyCandidateProfile();
-      console.log('📋 Profile response:', response);
-      
-      if (response?.data?.result) {
+      console.log('📋 Profile response:', response?.data);
+
+      if (response?.data?.code === 1000 && response?.data?.result) {
         const profileData = response.data.result;
-        console.log('✅ Profile data:', profileData);
+        console.log('✅ Profile loaded:', profileData);
         setProfile(profileData);
         setFormData({
           name: profileData.fullName || '',
@@ -48,13 +52,58 @@ function ProfilePage() {
           address: profileData.address || '',
           birthday: profileData.birthday || ''
         });
+      } else if (response?.data?.code === 1006) {
+        // Unauthenticated
+        console.error('🔒 Code 1006: Unauthenticated');
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại');
+        localStorage.clear();
+        setTimeout(() => navigate('/login'), 1500);
+      } else if (response?.data?.code === 1007) {
+        // User not found or bad request
+        console.error('⚠️ Code 1007: User not found or bad request');
+        toast.error('Không tìm thấy thông tin người dùng. Vui lòng tạo hồ sơ');
       } else {
-        console.warn('⚠️ No profile data returned');
+        const errorMsg = response?.data?.message || 'Không thể tải hồ sơ';
+        console.error('❌ Error loading profile:', response?.data);
+        toast.error(errorMsg);
       }
     } catch (err) {
       console.error('❌ Error fetching profile:', err);
-      console.error('❌ Error response:', err.response?.data);
-      toast.error('Không thể tải hồ sơ');
+      console.error('Error details:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message
+      });
+      
+      if (err.response?.status === 400) {
+        // User chưa có profile → có thể cần tạo mới
+        const errorData = err.response?.data;
+        console.error('🔴 400 Error - Possibly no profile exists:', errorData);
+        
+        toast.error('Không tìm thấy hồ sơ. Hãy đăng xuất và đăng nhập lại', {
+          duration: 3000
+        });
+        
+        // Don't auto-clear, let user decide
+        setTimeout(() => {
+          const shouldLogout = confirm('Không tìm thấy hồ sơ của bạn. Đăng xuất và thử lại?');
+          if (shouldLogout) {
+            localStorage.clear();
+            navigate('/login');
+          }
+        }, 1000);
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        toast.error('🔒 Phiên đăng nhập hết hạn hoặc không có quyền truy cập');
+        localStorage.clear();
+        setTimeout(() => navigate('/login'), 1500);
+      } else if (err.response?.status === 404) {
+        toast.error('❌ Hồ sơ người dùng không được tìm thấy. Vui lòng liên hệ Admin');
+        setTimeout(() => navigate('/'), 2000);
+      } else {
+        const errorMessage = err.response?.data?.message || err.message || 'Lỗi kết nối. Vui lòng thử lại';
+        console.error('Full error:', err.response?.data);
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,30 +118,36 @@ function ProfilePage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) { 
-      toast.error('Ảnh không được vượt quá 5MB'); 
-      return; 
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ảnh không được vượt quá 5MB');
+      return;
     }
-    if (!file.type.startsWith('image/')) { 
-      toast.error('Vui lòng chọn file ảnh'); 
-      return; 
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file ảnh');
+      return;
     }
 
     try {
       setUploading(true);
       toast.info('Đang tải ảnh lên...');
-      
-      const response = await profileAPI.uploadCandidateAvatar(profile.candidateProfileId, file);
-      
+
+      const profileId = profile?.candidateProfileId || user?.id;
+      if (!profileId) {
+        toast.error('Không tìm thấy thông tin người dùng');
+        return;
+      }
+
+      const response = await profileAPI.uploadCandidateAvatar(profileId, file);
+
       if (response?.data?.code === 1000) {
-        toast.success('Đã cập nhật ảnh đại diện thành công');
-        await fetchProfile(); // Refresh profile
+        toast.success('Đã cập nhật ảnh đại diện');
+        await fetchProfile();
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
       console.error('❌ Error uploading avatar:', err);
-      toast.error('Không thể tải ảnh lên. Vui lòng thử lại.');
+      toast.error(err.response?.data?.message || 'Không thể tải ảnh lên');
     } finally {
       setUploading(false);
     }
@@ -103,30 +158,37 @@ function ProfilePage() {
     if (!file) return;
 
     const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!validTypes.includes(file.type)) { 
-      toast.error('Chỉ hỗ trợ file PDF hoặc DOCX'); 
-      return; 
+    if (!validTypes.includes(file.type)) {
+      toast.error('Chỉ hỗ trợ file PDF hoặc DOCX');
+      return;
     }
-    if (file.size > 5 * 1024 * 1024) { 
-      toast.error('File không được vượt quá 5MB'); 
-      return; 
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File không được vượt quá 5MB');
+      return;
     }
 
     try {
       setUploading(true);
       toast.info('Đang tải CV lên...');
-      
-      const response = await profileAPI.uploadCV(profile.candidateProfileId, file);
-      
+
+      // Lấy ID hồ sơ từ profile hoặc user
+      const profileId = profile?.candidateProfileId || user?.id;
+      if (!profileId) {
+        toast.error('Không tìm thấy thông tin người dùng');
+        return;
+      }
+
+      const response = await profileAPI.uploadCV(profileId, file);
+
       if (response?.data?.code === 1000) {
         toast.success(`Đã tải CV lên thành công: ${file.name}`);
-        await fetchProfile(); // Refresh profile
+        await fetchProfile();
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
       console.error('❌ Error uploading CV:', err);
-      toast.error('Không thể tải CV lên. Vui lòng thử lại.');
+      toast.error(err.response?.data?.message || 'Không thể tải CV lên');
     } finally {
       setUploading(false);
     }
@@ -140,7 +202,7 @@ function ProfilePage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
+
     if (!profile?.candidateProfileId) {
       toast.error('Không tìm thấy thông tin profile');
       return;
@@ -149,7 +211,7 @@ function ProfilePage() {
     try {
       setUploading(true);
       toast.info('Đang lưu thay đổi...');
-      
+
       const updateData = {
         fullName: formData.name,
         phoneNumber: formData.phone,
@@ -162,7 +224,7 @@ function ProfilePage() {
         profile.candidateProfileId,
         updateData
       );
-      
+
       if (response?.data?.code === 1000) {
         toast.success('Đã lưu thay đổi thành công!');
         await fetchProfile(); // Refresh profile
@@ -260,7 +322,7 @@ function ProfilePage() {
               <section className="bg-white border border-outline-variant rounded-xl p-8 space-y-6 shadow-sm">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-manrope font-bold text-primary">Kinh nghiệm</h3>
-                  <button className="text-secondary hover:underline flex items-center space-x-1 text-sm font-semibold">
+                  <button className="text-secondary hover:underline flex items-center space-x-1 text-sm font-semibold cursor-pointer">
                     <span className="material-symbols-outlined text-lg">add</span>
                     <span>Thêm</span>
                   </button>
@@ -283,7 +345,7 @@ function ProfilePage() {
               <section className="bg-white border border-outline-variant rounded-xl p-8 space-y-6 shadow-sm">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-manrope font-bold text-primary">Học vấn</h3>
-                  <button className="text-secondary hover:underline flex items-center space-x-1 text-sm font-semibold">
+                  <button className="text-secondary hover:underline flex items-center space-x-1 text-sm font-semibold cursor-pointer">
                     <span className="material-symbols-outlined text-lg">add</span>
                     <span>Thêm</span>
                   </button>
@@ -321,10 +383,10 @@ function ProfilePage() {
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110">
+                      <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110 cursor-pointer">
                         <span className="material-symbols-outlined">visibility</span>
                       </button>
-                      <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-error hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110" onClick={handleDeleteCV}>
+                      <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-error hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110 cursor-pointer" onClick={handleDeleteCV}>
                         <span className="material-symbols-outlined">delete</span>
                       </button>
                     </div>
@@ -344,7 +406,7 @@ function ProfilePage() {
 
             {/* Save Button */}
             <div className="flex justify-end pt-4">
-              <button onClick={handleSave} className="bg-secondary text-white px-10 py-4 rounded-lg font-manrope font-bold shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all flex items-center space-x-2">
+              <button onClick={handleSave} className="bg-secondary text-white px-10 py-4 rounded-lg font-manrope font-bold shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all flex items-center space-x-2 cursor-pointer">
                 <span>Lưu thay đổi</span>
                 <span className="material-symbols-outlined">check_circle</span>
               </button>

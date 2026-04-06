@@ -1,1 +1,1 @@
-// Placeholder for pages
+// Trình giữ chỗ cho các trang

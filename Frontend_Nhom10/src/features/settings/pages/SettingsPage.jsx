@@ -12,8 +12,8 @@ function SettingsPage() {
   const { user, userRole } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  // State management
+
+  // Quản lý trạng thái
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -34,11 +34,11 @@ function SettingsPage() {
 
   const fetchProfile = async () => {
     try {
-      await ensureAuthenticated(); // Ensure token before API call
-      const response = userRole === 'CANDIDATE' 
+      await ensureAuthenticated(); // Đảm bảo token trước khi gọi API
+      const response = userRole === 'CANDIDATE'
         ? await profileAPI.getMyCandidateProfile()
         : await profileAPI.getMyCompanyProfile();
-        
+
       if (response?.data?.result) {
         setProfile(response.data.result);
       }
@@ -47,7 +47,7 @@ function SettingsPage() {
     }
   };
 
-  // Event handlers
+  // Trình xử lý sự kiện
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
@@ -63,7 +63,7 @@ function SettingsPage() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       toast.error('Vui lòng điền đầy đủ thông tin');
       return;
@@ -91,8 +91,8 @@ function SettingsPage() {
         newPassword: passwordData.newPassword
       };
 
-      const profileId = userRole === 'CANDIDATE' 
-        ? profile.candidateProfileId 
+      const profileId = userRole === 'CANDIDATE'
+        ? profile.candidateProfileId
         : profile.companyProfileId;
 
       const response = userRole === 'CANDIDATE'
