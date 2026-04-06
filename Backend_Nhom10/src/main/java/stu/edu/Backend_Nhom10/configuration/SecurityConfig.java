@@ -39,10 +39,7 @@ public class SecurityConfig {
                         "/swagger-ui.html"
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
-<<<<<<< Updated upstream
                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
-=======
->>>>>>> Stashed changes
                 .requestMatchers("/").permitAll()
                 .anyRequest().authenticated());
 
