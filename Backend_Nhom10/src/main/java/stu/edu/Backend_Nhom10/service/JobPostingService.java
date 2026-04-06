@@ -50,6 +50,10 @@ public class JobPostingService {
 
         post.setIndustry(industry);
         Set<Skill> skills = new HashSet<>(skillRepository.findAllById(request.getSkillIds()));
+        boolean isValid = skills.stream().allMatch(skill -> skill.getIndustry().getIndustryId().equals(industry.getIndustryId()));
+        if(!isValid){
+            throw new AppException(ErrorCode.INVALID_SKILL_INDUSTRY);
+        }
         post.setSkills(skills);
         post.setStatus(Status.PENDING);
         return jobPostingMapper.toJobPostingResponse(jobPostingRepository.save(post));

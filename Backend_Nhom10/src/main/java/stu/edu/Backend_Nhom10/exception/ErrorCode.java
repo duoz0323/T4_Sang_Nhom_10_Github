@@ -18,6 +18,7 @@ public enum ErrorCode {
     USER_NOT_EXISTED(1011, "User not existed", HttpStatus.BAD_REQUEST),
     PAGE_NOT_FOUND(1012, "Page not found", HttpStatus.NOT_FOUND),
     CANDIDATE_NOT_FOUND(1013, "Candidate not found", HttpStatus.NOT_FOUND),
+    INVALID_SKILL_INDUSTRY(1037,"Skill not belong to industry",HttpStatus.BAD_REQUEST),
 
     //Valid Code
     NOT_BLANK(1014,"Cannot be left blank",HttpStatus.BAD_REQUEST),
