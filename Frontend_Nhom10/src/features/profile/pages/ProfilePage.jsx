@@ -330,7 +330,7 @@ function ProfilePage() {
                 <div className="space-y-8">
                   {(profile?.experiences || []).map(exp => (
                     <div key={exp.id} className="relative pl-6 border-l-2 border-surface-container">
-                      <div className={`absolute -left-[9px] top-0 h-4 w-4 rounded-full ${exp.current ? 'bg-secondary' : 'bg-surface-container'} ring-4 ring-white`}></div>
+                      <div className={`absolute -left-2.25 top-0 h-4 w-4 rounded-full ${exp.current ? 'bg-secondary' : 'bg-surface-container'} ring-4 ring-white`}></div>
                       <div>
                         <p className="font-bold text-on-surface">{exp.title}</p>
                         <p className={`text-sm ${exp.current ? 'text-secondary' : 'text-on-surface-variant'} font-medium`}>{exp.company} • {exp.period}</p>
@@ -353,7 +353,7 @@ function ProfilePage() {
                 <div className="space-y-8">
                   {(profile?.education || []).map(edu => (
                     <div key={edu.id} className="flex space-x-4">
-                      <div className="h-12 w-12 rounded bg-surface-container flex items-center justify-center flex-shrink-0">
+                      <div className="h-12 w-12 rounded bg-surface-container flex items-center justify-center shrink-0">
                         <span className="material-symbols-outlined text-primary">{edu.icon}</span>
                       </div>
                       <div>
@@ -378,7 +378,7 @@ function ProfilePage() {
                         <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>picture_as_pdf</span>
                       </div>
                       <div>
-                        <p className="font-bold text-sm text-on-surface truncate max-w-[150px]">{profile?.cv?.filename || 'CV.pdf'}</p>
+                        <p className="font-bold text-sm text-on-surface truncate max-w-37.5">{profile?.cv?.filename || 'CV.pdf'}</p>
                         <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Cập nhật: {profile?.cv?.uploadedAt || 'N/A'} • {profile?.cv?.size || 'N/A'}</p>
                       </div>
                     </div>
@@ -406,7 +406,7 @@ function ProfilePage() {
 
             {/* Save Button */}
             <div className="flex justify-end pt-4">
-              <button onClick={handleSave} className="bg-secondary text-white px-10 py-4 rounded-lg font-manrope font-bold shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all flex items-center space-x-2 cursor-pointer">
+              <button onClick={handleSave} className="bg-secondary text-white px-10 py-4 rounded-lg font-manrope font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center space-x-2 cursor-pointer">
                 <span>Lưu thay đổi</span>
                 <span className="material-symbols-outlined">check_circle</span>
               </button>

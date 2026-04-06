@@ -253,7 +253,7 @@ function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleToggleNotification('emailAlerts')}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ring-2 ring-transparent ring-offset-2 ${
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ring-2 ring-transparent ring-offset-2 ${
                       notifications.emailAlerts ? 'bg-secondary' : 'bg-surface-variant'
                     }`}
                   >
@@ -280,7 +280,7 @@ function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleToggleNotification('pushNotifications')}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ring-2 ring-transparent ring-offset-2 ${
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ring-2 ring-transparent ring-offset-2 ${
                       notifications.pushNotifications ? 'bg-secondary' : 'bg-surface-variant'
                     }`}
                   >
@@ -305,7 +305,7 @@ function SettingsPage() {
                   </div>
                   <button
                     onClick={() => handleToggleNotification('smsNotifications')}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
                       notifications.smsNotifications ? 'bg-secondary' : 'bg-surface-variant'
                     }`}
                   >

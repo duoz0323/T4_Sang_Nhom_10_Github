@@ -235,10 +235,10 @@ const HomePage = () => {
 
       <main className="pt-16 flex-1">
         {/* Phần Hero */}
-        <section className="relative min-h-[670px] flex items-center overflow-hidden bg-primary-container">
+        <section className="relative min-h-167.5 flex items-center overflow-hidden bg-primary-container">
           <div className="absolute inset-0 opacity-40">
             <img className="w-full h-full object-cover" alt="Modern high-end office interior with glass walls and professional atmosphere at twilight with soft blue and teal lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwHEMTNrS-jAJNuHkwPB3MOICE6iPEc7qfmlm9SMkI8pHo6XLPvPSamT9k8IC6HC1x-IA7oRs_lja7poLVwWNFFBaIoRDHU-c7XjKilsJrvZ2wMD2zsUeB50otL5PTQCfPkxfeFw8qDm61Xk24fkwUq4L_WXJH6-tw-D8kBsN2O7fYlpzv9zqtx6_7ufOd30hTVmXK6p4lINX9NWyEIVupiGtW2giUq__SPslL7megVTAlV1tK4kxzvGslWBbW9JIOLJWYoHoOVq5s" />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-container via-primary-container/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-linear-to-r from-primary-container via-primary-container/80 to-transparent"></div>
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -264,10 +264,11 @@ const HomePage = () => {
                     <span className="material-symbols-outlined text-outline">work</span>
                     <select 
                       className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium outline-none cursor-pointer" 
-                      value={searchKeyword}
-                      onChange={(e) => setSearchKeyword(e.target.value)}
-                    >
-                      <option value="">Ngành nghề</option>
+                        value={searchIndustry}
+                        onChange={(e) => setSearchIndustry(e.target.value)}
+                        disabled={filtersLoading}
+                      >
+                        <option value="">{filtersLoading ? 'Đang tải...' : 'Ngành nghề'}</option>
                       {industries.map((industry) => (
                         <option key={industry.industryId} value={industry.nameIndustry}>{industry.nameIndustry}</option>
                       ))}
@@ -349,7 +350,7 @@ const HomePage = () => {
             <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
               <div className="relative h-56 rounded-2xl overflow-hidden bg-slate-900">
                 <img className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="High tech digital circuit board background with glowing teal and blue binary data patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-1_uc3ziR2-N10mmQiR4p5f4ESrarnRbKPh0UW6n8EqhG8g1NRcuZnJniDwhAinC6ZLP3w6ggiHDXlSq7CmIeCkLf_pf6svN4rYGl2mhF_FDXSTUlwsAIJoKej4AvB_ThdEj2iq-m3l5LG0Da1Y9nY5Jp3jZy1RIXzhJt4Y4z3i-6rvA9cFQVF3W1qUT_316K3ajeDIBjsWAxWwgTbYQHxno33-A6uU99UeSV_uSszs1LagLTX2yTntvS4xPQdBggXemmivL-frSr" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-transparent to-transparent"></div>
                 <div className="absolute bottom-5 left-5 text-white">
                   <h3 className="text-xl font-bold font-headline">Công nghệ (IT)</h3>
                   <p className="text-sm text-slate-300">1,240 việc làm mới</p>

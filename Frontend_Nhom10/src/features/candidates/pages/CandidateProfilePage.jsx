@@ -111,7 +111,7 @@ const CandidateProfilePage = () => {
                 <h2 className="text-3xl font-extrabold tracking-tight text-primary leading-none">
                   Việc làm đã ứng tuyển
                 </h2>
-                <div className="h-[2px] flex-1 bg-surface-container mb-1"></div>
+                <div className="h-0.5 flex-1 bg-surface-container mb-1"></div>
                 <span className="text-sm font-bold text-teal-600 uppercase tracking-widest pb-1">
                   {appliedJobs.length} hồ sơ
                 </span>
@@ -177,7 +177,7 @@ const CandidateProfilePage = () => {
                 <h2 className="text-3xl font-extrabold tracking-tight text-primary leading-none">
                   Việc làm đã lưu
                 </h2>
-                <div className="h-[2px] flex-1 bg-surface-container mb-1"></div>
+                <div className="h-0.5 flex-1 bg-surface-container mb-1"></div>
                 <span className="text-sm font-bold text-teal-600 uppercase tracking-widest pb-1">
                   {savedJobs.length > 0 ? 'Xem tất cả' : `${savedJobs.length} công việc`}
                 </span>
@@ -207,7 +207,7 @@ const CandidateProfilePage = () => {
                                 className="w-full h-full object-contain"
                               />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                              <div className="w-full h-full bg-linear-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-xl">
                                 {companyInitial}
                               </div>
                             )}

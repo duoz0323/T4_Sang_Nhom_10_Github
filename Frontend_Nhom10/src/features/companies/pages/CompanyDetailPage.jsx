@@ -112,13 +112,13 @@ function CompanyDetailPage() {
       <Header />
 
       {/* Hero Section: Company Identity */}
-      <header className="relative w-full h-[400px] overflow-hidden">
+      <header className="relative w-full h-100 overflow-hidden">
         <img
-          className="w-full h-full object-cover grayscale-[20%] brightness-75"
+          className="w-full h-full object-cover grayscale-20 brightness-75"
           src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200"
           alt="Company office"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-primary/80 to-transparent"></div>
         
         <div className="absolute bottom-0 left-0 w-full px-8 pb-12 max-w-7xl mx-auto flex items-end justify-between gap-8">
           <div className="flex items-end gap-8">
@@ -198,7 +198,7 @@ function CompanyDetailPage() {
             <h2 className="font-headline text-3xl font-bold text-primary mb-8">
               Không gian khơi nguồn sáng tạo.
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 gap-4 h-[500px]">
+            <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 gap-4 h-125">
               <div className="col-span-2 row-span-2 relative overflow-hidden rounded-xl group">
                 <img
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"

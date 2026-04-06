@@ -520,7 +520,7 @@ const JobListPage = () => {
                   <div key={job.jobPostingId} className="job-card bg-white p-6 rounded-xl border border-slate-100 relative group hover:shadow-xl hover:border-secondary/30 transition-all duration-300 ease-in-out cursor-pointer">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
                       {/* Company Avatar với fallback đẹp */}
-                      <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-primary to-secondary border border-outline-variant flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-linear-to-br from-primary to-secondary border border-outline-variant flex items-center justify-center">
                         {job.logo ? (
                           <img
                             className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-700 bg-white p-2"

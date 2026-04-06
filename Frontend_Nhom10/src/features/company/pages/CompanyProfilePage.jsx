@@ -337,7 +337,7 @@ function CompanyProfilePage() {
                 {profile?.benefits && profile.benefits.length > 0 ? (
                   profile.benefits.map(benefit => (
                     <div key={benefit.id} className="flex gap-4 p-4 bg-surface rounded-lg border border-outline-variant">
-                      <div className="h-12 w-12 rounded-lg bg-secondary-container flex items-center justify-center flex-shrink-0">
+                      <div className="h-12 w-12 rounded-lg bg-secondary-container flex items-center justify-center shrink-0">
                         <span className="material-symbols-outlined text-secondary">{benefit.icon}</span>
                       </div>
                       <div className="flex-1">
@@ -356,7 +356,7 @@ function CompanyProfilePage() {
             <div className="flex justify-end pt-4">
               <button 
                 onClick={handleSave} 
-                className="bg-secondary text-white px-10 py-4 rounded-lg font-manrope font-bold shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all flex items-center space-x-2"
+                className="bg-secondary text-white px-10 py-4 rounded-lg font-manrope font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center space-x-2"
               >
                 <span>Lưu thay đổi</span>
                 <span className="material-symbols-outlined">check_circle</span>

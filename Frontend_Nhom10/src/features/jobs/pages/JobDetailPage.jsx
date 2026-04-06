@@ -197,10 +197,15 @@ const JobDetailPage = () => {
       console.log('✅ Application response:', response);
 
       if (response?.data?.code === 1000 || response?.data?.result) {
-        toast.success('Đơn ứng tuyển đã được gửi thành công!', {
-          description: 'Nhà tuyển dụng sẽ xem xét hồ sơ của bạn trong thời gian sớm nhất.',
-          duration: 5000,
-        });
+        toast.success('🎉 Đơn ứng tuyển đã được Gửi Thành Công!', {
+            description: 'Nhà tuyển dụng sẽ xem xét hồ sơ của bạn và phản hồi sớm nhất.',
+            duration: 6000,
+            action: {
+              label: 'Xem đơn của tôi',
+              onClick: () => navigate('/profile')
+            },
+            style: { border: '1px solid #10b981', color: '#10b981' }
+          });
         // Reset form
         setFormData({
           fullName: '',
@@ -220,10 +225,22 @@ const JobDetailPage = () => {
     } catch (err) {
       console.error('❌ Error applying job:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
-      toast.error('Gửi đơn ứng tuyển thất bại', {
-        description: errorMessage,
-        duration: 5000,
-      });
+      if (err.response?.status === 401) {
+          toast.error('Phiên đăng nhập đã hết hạn', {
+            description: 'Vui lòng đăng nhập lại để ứng tuyển.',
+            duration: 6000,
+            action: {
+              label: 'Đăng nhập',
+              onClick: () => navigate('/login')
+            }
+          });
+        } else {
+          toast.error('❌ Gửi đơn ứng tuyển thất bại!', {
+            description: errorMessage,
+            duration: 5000,
+            style: { border: '1px solid #ef4444', color: '#ef4444' }
+          });
+        }
     } finally {
       setIsApplying(false);
     }
@@ -320,10 +337,10 @@ const JobDetailPage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-secondary/5 border border-secondary/20 px-6 py-4 rounded-xl text-center min-w-[160px]">
+                <div className="bg-secondary/5 border border-secondary/20 px-6 py-4 rounded-xl text-center min-w-40">
                   <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Mức lương</p>
                   <p className="text-lg font-black text-primary">
-                    ${job.salaryMin / 1000}k – ${job.salaryMax / 1000}k
+                    {job.salaryMin / 1000}triệu – {job.salaryMax / 1000}triệu
                   </p>
                 </div>
               </div>
@@ -528,3 +545,7 @@ const MOCK_JOB = {
 };
 
 export default JobDetailPage;
+
+
+
+

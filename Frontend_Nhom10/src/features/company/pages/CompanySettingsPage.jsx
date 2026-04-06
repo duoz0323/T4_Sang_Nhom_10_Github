@@ -148,7 +148,7 @@ function CompanySettingsPage() {
                   <div className="flex justify-end">
                     <button 
                       type="submit" 
-                      className="bg-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:translate-y-[-2px] transition-all flex items-center gap-2"
+                      className="bg-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2"
                     >
                       <span>Cập nhật mật khẩu</span>
                       <span className="material-symbols-outlined text-lg">check_circle</span>

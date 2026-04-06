@@ -38,7 +38,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
-    // userData nên bao gồm: { id, name, email, avatar, role: 'APPLICANT' | 'COMPANY' | 'ADMIN' }
+    // Đảm bảo userData có role
+    const userType = localStorage.getItem('userType');
+    if (!userData.role && userType) {
+      if (userType === 'admin') userData.role = 'ADMIN';
+      else if (userType === 'candidate') userData.role = 'APPLICANT';
+      else if (userType === 'company') userData.role = 'COMPANY';
+    }
+
     console.log('✅ AuthContext: Login', userData);
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));

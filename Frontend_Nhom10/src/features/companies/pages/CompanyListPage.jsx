@@ -398,7 +398,7 @@ const CompanyListPage = () => {
                 Từ các tập đoàn đa quốc gia đến các startup kỳ lân, hãy tìm nơi bạn thuộc về.
               </p>
             </div>
-            <div className="flex flex-col gap-4 min-w-[300px]">
+            <div className="flex flex-col gap-4 min-w-75">
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#43474e]">
                   search

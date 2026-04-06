@@ -85,7 +85,7 @@ export default function MyJobsPage() {
             <section>
               <div className="flex items-end gap-4 mb-8">
                 <h2 className="text-3xl font-extrabold tracking-tight text-primary leading-none font-headline">Việc làm đã ứng tuyển</h2>
-                <div className="h-[2px] flex-1 bg-surface-container mb-1"></div>
+                <div className="h-0.5 flex-1 bg-surface-container mb-1"></div>
                 <span className="text-sm font-bold text-teal-600 uppercase tracking-widest pb-1">{appliedJobs.length} hồ sơ</span>
               </div>
               <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
@@ -130,7 +130,7 @@ export default function MyJobsPage() {
             <section>
               <div className="flex items-end gap-4 mb-8">
                 <h2 className="text-3xl font-extrabold tracking-tight text-primary leading-none font-headline">Việc làm đã lưu</h2>
-                <div className="h-[2px] flex-1 bg-surface-container mb-1"></div>
+                <div className="h-0.5 flex-1 bg-surface-container mb-1"></div>
                 <span className="text-sm font-bold text-teal-600 uppercase tracking-widest pb-1">{savedJobs.length} Việc làm</span>
               </div>
               
