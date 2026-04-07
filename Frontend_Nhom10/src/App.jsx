@@ -17,6 +17,7 @@ import CompanyDashboard from "./features/company/pages/CompanyDashboard.jsx";
 import CompanyProfilePage from "./features/company/pages/CompanyProfilePage.jsx";
 import CompanySettingsPage from "./features/company/pages/CompanySettingsPage.jsx";
 import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePage.jsx";
+import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage.jsx";
 import BlogPage from "./features/blog/pages/BlogPage.jsx";
 import './App.css'
 
@@ -104,11 +105,29 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
+          {/* Admin Routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
   )
-
 }
 
 export default App;
