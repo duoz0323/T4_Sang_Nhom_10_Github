@@ -30,12 +30,6 @@ public class CompanyProfileController {
                 .result(companyProfileService.register(request))
                 .build();
     }
-    @PostMapping("/login")
-    ApiResponse<TokenExchangeResponse> login(@RequestBody @Valid LoginRequest request) {
-        return ApiResponse.<TokenExchangeResponse>builder()
-                .result(companyProfileService.login(request))
-                .build();
-    }
     @GetMapping("/profiles")
     ApiResponse<List<CompanyProfileResponse>> getAllProfiles() {
         return ApiResponse.<List<CompanyProfileResponse>>builder()

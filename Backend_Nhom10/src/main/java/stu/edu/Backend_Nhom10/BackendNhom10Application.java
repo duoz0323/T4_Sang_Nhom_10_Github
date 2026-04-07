@@ -9,9 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableFeignClients
 public class BackendNhom10Application {
-
 	public static void main(String[] args) {
 		SpringApplication.run(BackendNhom10Application.class, args);
 	}
-
 }

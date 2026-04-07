@@ -4,6 +4,7 @@ import stu.edu.Backend_Nhom10.dto.ApiResponse;
 import stu.edu.Backend_Nhom10.dto.identity.TokenExchangeResponse;
 import stu.edu.Backend_Nhom10.dto.request.LoginRequest;
 import stu.edu.Backend_Nhom10.dto.request.CandidateProfileRequest;
+import stu.edu.Backend_Nhom10.dto.request.RefreshTokenRequest;
 import stu.edu.Backend_Nhom10.dto.request.RegistrationCandidateRequest;
 import stu.edu.Backend_Nhom10.dto.response.CandidateProfileResponse;
 import stu.edu.Backend_Nhom10.service.CandidateProfileService;
@@ -30,12 +31,7 @@ public class CandidateProfileController {
                 .result(candidateProfileService.register(request))
                 .build();
     }
-    @PostMapping("/login")
-    ApiResponse<TokenExchangeResponse> login(@RequestBody @Valid LoginRequest request) {
-        return ApiResponse.<TokenExchangeResponse>builder()
-                .result(candidateProfileService.login(request))
-                .build();
-    }
+
     @GetMapping("/profiles")
     ApiResponse<List<CandidateProfileResponse>> getAllProfiles() {
             return ApiResponse.<List<CandidateProfileResponse>>builder()

@@ -18,10 +18,13 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/company_profile/register",
-            "/company_profile/login",
+            "/company_profile/refresh_token",
             "/candidate_profile/register",
             "/candidate_profile/login",
-            "/applications/public"
+            "/applications/public",
+            "/auth/login",
+            "/auth/refresh_token",
+            "/auth/logout"
     };
 
     private final String[] PUBLIC_GET_ENDPOINTS = {
