@@ -15,7 +15,6 @@ export default function Pagination({
       pages.push(1, 2, 3);
       if (totalPages > 3) pages.push("...");
       pages.push(totalPages);
-      a;
     } else {
       pages.push(1);
       pages.push("...");

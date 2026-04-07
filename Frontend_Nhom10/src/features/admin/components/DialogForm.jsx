@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Mail, Lock, Shield, Save, X } from "lucide-react";
-import api from "../../lib/axios";
+import api from "../../../services/api";
 import { toast } from "sonner";
 
 export default function UserForm({ type, user, onClose, onSuccess }) {
