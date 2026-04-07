@@ -559,7 +559,7 @@ const CompanyListPage = () => {
 
 // Company Card Component - ALL CARDS SAME SIZE
 const CompanyCard = ({ company, onViewDetails }) => {
-  const jobCount = Math.floor(Math.random() * 40) + 5;
+  const [jobCount] = useState(() => Math.floor(Math.random() * 40) + 5);
   const getLogoUrl = (company) => {
     if (company.avatar || company.logo) {
       return company.avatar || company.logo;

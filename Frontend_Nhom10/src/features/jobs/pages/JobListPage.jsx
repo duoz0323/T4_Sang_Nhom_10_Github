@@ -99,7 +99,7 @@ const JobListPage = () => {
     }
   }, [isAuthenticated]);
 
-  const fetchSavedJobs = async () => {
+  async function fetchSavedJobs() {
     try {
       const response = await jobAPI.getSavedJobs();
       if (response?.data?.result) {
@@ -112,7 +112,7 @@ const JobListPage = () => {
     }
   };
 
-  const fetchJobs = async () => {
+  async function fetchJobs() {
     setLoading(true);
 
     try {
