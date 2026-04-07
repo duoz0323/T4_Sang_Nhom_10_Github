@@ -11,6 +11,7 @@ function ProfilePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
+  const [cvList, setCvList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ 
@@ -32,9 +33,9 @@ function ProfilePage() {
     }
   }, [user]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
 
       const response = await profileAPI.getMyCandidateProfile();
       console.log('📋 Profile response:', response?.data);
@@ -42,11 +43,20 @@ function ProfilePage() {
       if (response?.data?.code === 1000 && response?.data?.result) {
         const profileData = response.data.result;
         console.log('✅ Profile loaded:', profileData);
+        
+        try {
+          const cvRes = await profileAPI.getMyCVs();
+          if (cvRes?.data?.code === 1000 && cvRes?.data?.result) {
+            setCvList(cvRes.data.result);
+          }
+        } catch (e) {
+          console.error('Không tải được danh sách CV', e);
+        }
         setProfile(profileData);
         setFormData({
-          name: profileData.fullName || '',
-          position: profileData.currentJobTitle || '',
-          email: profileData.email || '',
+          name: profileData.fullName || user?.fullName || '',
+          position: profileData.currentJobTitle || user?.position || '',
+          email: profileData.email || user?.email || '',
           phone: profileData.phoneNumber || '',
           bio: profileData.description || '',
           address: profileData.address || '',
@@ -141,7 +151,7 @@ function ProfilePage() {
 
       if (response?.data?.code === 1000) {
         toast.success('Đã cập nhật ảnh đại diện');
-        await fetchProfile();
+        await fetchProfile(false);
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
@@ -171,18 +181,39 @@ function ProfilePage() {
       setUploading(true);
       toast.info('Đang tải CV lên...');
 
-      // Lấy ID hồ sơ từ profile hoặc user
       const profileId = profile?.candidateProfileId || user?.id;
       if (!profileId) {
         toast.error('Không tìm thấy thông tin người dùng');
         return;
       }
+      
+      // Fetch an industry ID to satisfy backend foreign key constraints
+      let fallbackIndustryId = 1;
+      try {
+        const indRes = await fetch('https://t4-sang-nhom-10-backend.onrender.com/industries').then(r => r.json());
+        if (indRes?.code === 1000 && indRes?.result?.length > 0) {
+          fallbackIndustryId = indRes.result[0].industryId;
+        }
+      } catch (e) {
+        console.error('Could not fetch industry fallback:', e);
+      }
+      
+      const cvData = {
+        name: `CV_${file.name.substring(0, 20)}`,
+        phone: formData.phone || '',
+        email: formData.email || '',
+        candidateProfileId: profileId,
+        industryId: profile?.industry?.id || profile?.industry?.industryId || fallbackIndustryId,
+        skillIds: []
+      };
 
-      const response = await profileAPI.uploadCV(profileId, file);
+      const response = await profileAPI.uploadCV(cvData, file);
 
       if (response?.data?.code === 1000) {
         toast.success(`Đã tải CV lên thành công: ${file.name}`);
-        await fetchProfile();
+        // Refresh CV list
+        const cvRes = await profileAPI.getMyCVs();
+        if (cvRes?.data?.code === 1000) setCvList(cvRes.data.result);
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
@@ -191,12 +222,25 @@ function ProfilePage() {
       toast.error(err.response?.data?.message || 'Không thể tải CV lên');
     } finally {
       setUploading(false);
+      // Reset input value to allow uploading same file again
+      e.target.value = null;
     }
   };
 
-  const handleDeleteCV = () => {
+  const handleDeleteCV = async (cvId) => {
     if (window.confirm('Bạn có chắc muốn xóa CV này?')) {
-      toast.success('Đã xóa CV');
+      try {
+        setUploading(true);
+        const response = await profileAPI.deleteCV(cvId);
+        toast.success('Đã xóa CV thành công');
+        const cvRes = await profileAPI.getMyCVs();
+        if (cvRes?.data?.code === 1000) setCvList(cvRes.data.result);
+      } catch (err) {
+        console.error('Lỗi khi xóa CV:', err);
+        toast.error(err.response?.data?.message || 'Không thể xóa CV');
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -217,19 +261,17 @@ function ProfilePage() {
         phoneNumber: formData.phone,
         address: formData.address,
         description: formData.bio,
-        birthday: formData.birthday
+        birthday: formData.birthday || null,
+        avatar: profile.avatar || null
       };
 
-      const response = await profileAPI.updateCandidateProfile(
-        profile.candidateProfileId,
-        updateData
-      );
-
-      if (response?.data?.code === 1000) {
-        toast.success('Đã lưu thay đổi thành công!');
-        await fetchProfile(); // Refresh profile
+      const response = await profileAPI.updateCandidateProfile(updateData);
+      
+      if (response && response.data) {
+        toast.success('Lưu thông tin thành công');
+        await fetchProfile(false);
       } else {
-        toast.error(response?.data?.message || 'Có lỗi xảy ra');
+        toast.error('Có lỗi xảy ra khi lưu thông tin');
       }
     } catch (err) {
       console.error('❌ Error updating profile:', err);
@@ -277,8 +319,12 @@ function ProfilePage() {
             <section className="bg-white border border-outline-variant rounded-xl p-8 shadow-sm">
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="relative group">
-                  <div className="h-32 w-32 rounded-full ring-4 ring-surface-container overflow-hidden bg-slate-200">
-                    <img alt="User Avatar" className="w-full h-full object-cover" src={profile?.avatar || user?.avatar || 'https://via.placeholder.com/150'}/>
+                    <div className="h-32 w-32 rounded-full ring-4 ring-surface-container overflow-hidden bg-primary flex items-center justify-center text-white text-5xl font-bold">
+                      {(profile?.avatar || user?.avatar) ? (
+                        <img alt="User Avatar" className="w-full h-full object-cover" src={profile?.avatar || user?.avatar} />
+                      ) : (
+                        <span>{(user?.name || profile?.fullName || 'U').charAt(0).toUpperCase()}</span>
+                      )}
                   </div>
                   <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-secondary text-white p-2 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform cursor-pointer">
                     <span className="material-symbols-outlined text-sm">photo_camera</span>
@@ -288,7 +334,7 @@ function ProfilePage() {
                 <div className="flex-1 w-full">
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-manrope font-extrabold tracking-tight text-primary">Thông tin cá nhân</h2>
-                    <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Cập nhật lần cuối: {profile?.lastUpdated || 'N/A'}</span>
+                    <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Cập nhật lần cuối: {profile?.updateAt ? new Date(profile.updateAt).toLocaleDateString('vi-VN') : 'N/A'}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1">
@@ -296,8 +342,8 @@ function ProfilePage() {
                       <input className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" type="text" name="name" value={formData.name} onChange={handleInputChange}/>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Vị trí hiện tại</label>
-                      <input className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" type="text" name="position" value={formData.position} onChange={handleInputChange}/>
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Ngày sinh</label>
+                      <input className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" type="date" name="birthday" value={formData.birthday || ''} onChange={handleInputChange}/>
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Email</label>
@@ -371,32 +417,36 @@ function ProfilePage() {
             <section className="bg-white border border-outline-variant rounded-xl p-8 shadow-sm">
               <h3 className="text-xl font-manrope font-bold text-primary mb-6">Tải lên CV (PDF/DOCX)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {profile?.cv ? (
-                  <div className="bg-white p-6 rounded-lg flex items-center justify-between border-dashed border-2 border-outline-variant shadow-sm">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-14 w-10 bg-red-50 text-red-600 rounded flex items-center justify-center border border-red-100">
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>picture_as_pdf</span>
+                {cvList && cvList.length > 0 ? (
+                  <div className="space-y-4">
+                    {cvList.map((cv) => (
+                      <div key={cv.cvId} className="bg-white p-6 rounded-lg flex items-center justify-between border-dashed border-2 border-outline-variant shadow-sm relative group">
+                        {cv.isDefault && <span className="absolute -top-3 -right-3 bg-secondary text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-sm">Mặc định</span>}
+                        <div className="flex items-center space-x-4">
+                          <div className="h-14 w-10 bg-red-50 text-red-600 rounded flex items-center justify-center border border-red-100">
+                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>picture_as_pdf</span>
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-on-surface truncate max-w-[150px]">{cv.fileName || cv.name || 'CV'}</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <a href={cv.urlCVPreview} target="_blank" rel="noopener noreferrer" className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110 cursor-pointer">
+                            <span className="material-symbols-outlined">visibility</span>
+                          </a>
+                          <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-error hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110 cursor-pointer" onClick={() => handleDeleteCV(cv.cvId)}>
+                            <span className="material-symbols-outlined">delete</span>
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-sm text-on-surface truncate max-w-37.5">{profile?.cv?.filename || 'CV.pdf'}</p>
-                        <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Cập nhật: {profile?.cv?.uploadedAt || 'N/A'} • {profile?.cv?.size || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-primary hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110 cursor-pointer">
-                        <span className="material-symbols-outlined">visibility</span>
-                      </button>
-                      <button className="p-2 bg-surface-container-highest rounded-lg text-on-surface-variant hover:bg-error hover:text-white transition-all duration-200 hover:shadow-md hover:scale-110 cursor-pointer" onClick={handleDeleteCV}>
-                        <span className="material-symbols-outlined">delete</span>
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 ) : (
-                  <div className="text-center text-on-surface-variant">Chưa có CV được tải lên</div>
+                  <div className="text-center text-on-surface-variant flex items-center justify-center border-dashed border-2 border-outline-variant rounded-lg p-6">Chưa có CV được tải lên</div>
                 )}
                 
                 <label className="group relative bg-surface hover:bg-white border-2 border-dashed border-outline-variant hover:border-secondary rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300">
-                  <input className="hidden" type="file" onChange={handleCVUpload}/>
+                  <input className="hidden" type="file" onChange={handleCVUpload} accept=".pdf,.doc,.docx" />
                   <span className="material-symbols-outlined text-4xl text-outline group-hover:text-secondary transition-colors mb-2">cloud_upload</span>
                   <p className="text-sm font-bold text-on-surface">Kéo thả hoặc Click để tải lên</p>
                   <p className="text-[10px] text-on-surface-variant mt-1">Định dạng hỗ trợ: PDF, DOCX (Tối đa 5MB)</p>
@@ -422,3 +472,5 @@ function ProfilePage() {
 }
 
 export default ProfilePage;
+
+

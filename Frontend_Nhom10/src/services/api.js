@@ -16,29 +16,20 @@ api.interceptors.request.use(
   (config) => {
     const url = config.url || '';
     
-    // DANH SÁCH ENDPOINTS KHÔNG CẦN TOKEN (Public endpoints)
-    // ⚠️ Backend SecurityConfig: .anyRequest().authenticated()
-    // → Chỉ những endpoint được khai báo EXPLICIT trong SecurityConfig mới public
     const publicEndpoints = [
       '/candidate_profile/login',
       '/candidate_profile/register',
       '/company_profile/login',
       '/company_profile/register',
-      '/posts/public',           // ✅ Danh sách công việc công khai
-      '/posts/',                 // ✅ Chi tiết công việc (GET /posts/{id})
-      // ✅ /applications/public - CẦN GỬI TOKEN nếu user đã login để tự động link
-      '/candidate_profile/profiles', // ✅ Danh sách profiles công khai
-      '/company_profile/profiles'    // ✅ Danh sách công ty công khai
+      '/posts/public',
+      '/posts/',
+      '/candidate_profile/profiles',
+      '/company_profile/profiles'
     ];
     
-    // Check if this is a public endpoint
     const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint));
     
-    if (isPublicEndpoint) {
-      // Public endpoint - KHÔNG CẦN TOKEN
-      console.log(`🌐 Public endpoint: ${url} - no token needed`);
-    } else {
-      // Protected endpoint - CẦN TOKEN
+    if (!isPublicEndpoint) {
       const token = localStorage.getItem('accessToken') || 
                     localStorage.getItem('token') || 
                     sessionStorage.getItem('temp_guest_token') ||
@@ -46,9 +37,6 @@ api.interceptors.request.use(
       
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log(`✅ Protected endpoint: ${url} - token attached`);
-      } else {
-        console.warn(`⚠️ Protected endpoint: ${url} - NO TOKEN (may cause 401)`);
       }
     }
     
@@ -65,7 +53,6 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // KHÔNG redirect về login nếu lỗi 401 từ login/register endpoints
     const authEndpoints = [
       '/candidate_profile/login',
       '/candidate_profile/register',
@@ -78,16 +65,10 @@ api.interceptors.response.use(
     );
     
     if (error.response?.status === 401 && !isAuthEndpoint) {
-      // Token hết hạn hoặc không hợp lệ
       console.error(`❌ 401 Unauthorized on ${error.config?.url}`);
       
-      // Clear token nhưng KHÔNG tự động redirect
-      // Để component tự quyết định có redirect hay không
       localStorage.removeItem('accessToken');
       localStorage.removeItem('token');
-      
-      // ❌ KHÔNG XÓA user và userType để tránh logout đột ngột
-      // Component sẽ tự xử lý khi cần
     }
     return Promise.reject(error);
   }
@@ -128,12 +109,12 @@ export const profileAPI = {
     return api.get('/company_profile/my-profile');
   },
 
-  // Cập nhật hồ sơ ứng viên (không cần profileId nữa)
+  // Cập nhật hồ sơ ứng viên
   updateCandidateProfile: (data) => {
     return api.put('/candidate_profile', data);
   },
 
-  // Cập nhật hồ sơ công ty (không cần profileId nữa)
+  // Cập nhật hồ sơ công ty
   updateCompanyProfile: (data) => {
     return api.put('/company_profile', data);
   },
@@ -149,14 +130,31 @@ export const profileAPI = {
   },
 
   // Tải ảnh đại diện (ứng viên)
-  uploadCandidateAvatar: (profileId, file) => {
+  uploadCandidateAvatar: async (profileId, file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.put(`/candidate_profile/${profileId}/avatar`, formData, {
+    const uploadResponse = await api.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+    const newAvatarUrl = uploadResponse.data;
+
+    const currentProfileResponse = await api.get('/candidate_profile/my-profile');
+    const cp = currentProfileResponse.data.result;
+
+    const updateRequest = {
+      fullName: cp.fullName || '',
+      phoneNumber: cp.phoneNumber || '',
+      address: cp.address || '',
+      description: cp.description || '',
+      currentJobTitle: cp.currentJobTitle || '',
+      status: cp.status || true,
+      birthday: cp.birthday || null,
+      avatar: newAvatarUrl
+    };
+
+    return api.put('/candidate_profile', updateRequest);
   },
 
   // Tải ảnh đại diện (công ty)
@@ -171,14 +169,25 @@ export const profileAPI = {
   },
 
   // Tải CV (ứng viên)
-  uploadCV: (profileId, file) => {
+  uploadCV: (data, file) => {
     const formData = new FormData();
+    formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
     formData.append('file', file);
-    return api.put(`/candidate_profile/${profileId}/cv`, formData, {
+    return api.post(`/profile-cv`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+  },
+
+  // Lấy danh sách CV (ứng viên)
+  getMyCVs: () => {
+    return api.get(`/profile-cv/my-profileCV`);
+  },
+
+  // Xóa CV (ứng viên)
+  deleteCV: (cvId) => {
+    return api.delete(`/profile-cv/${cvId}`);
   },
 
   // Xóa tài khoản (ứng viên)
@@ -244,16 +253,14 @@ export const jobAPI = {
   applyJob: (jobPostingId, applicationData, cvFile) => {
     const formData = new FormData();
 
-    // Phần 1: dữ liệu (JSON dưới dạng Blob)
     const data = {
-      jobPostingId,  // ✅ Tên trường đúng theo Backend
+      jobPostingId,
       name: applicationData.name ||  applicationData.fullName,
       email: applicationData.email,
       phone: applicationData.phone
     };
     formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
 
-    // Phần 2: tệp (nhị phân)
     if (cvFile) {
       formData.append('file', cvFile);
     }
@@ -265,15 +272,10 @@ export const jobAPI = {
 
   // Lấy các ứng dụng của tôi (chỉ ứng viên)
   getMyApplications: () => {
-    return api.get('/applications/me');  // ✅ Điểm cuối đúng theo Backend Swagger
+    return api.get('/applications/me');
   },
 
-  // ⚠️ CÔNG VIỆC ĐÃ LƯU - Backend chưa có endpoints này
-  // TODO: Backend cần triển khai tính năng saved-jobs
-  // Tạm thời vô hiệu hóa để không gây lỗi 404
-
   saveJob: (postId) => {
-      console.warn('⚠️ Tính năng lưu công việc dùng tạm localStorage');
       const saved = JSON.parse(localStorage.getItem('savedJobs') || '[]');
       if (!saved.includes(postId)) {
         saved.push(postId);
@@ -283,7 +285,6 @@ export const jobAPI = {
     },
 
     unsaveJob: (postId) => {
-      console.warn('⚠️ Tính năng lưu công việc dùng tạm localStorage');
       let saved = JSON.parse(localStorage.getItem('savedJobs') || '[]');
       saved = saved.filter(id => id !== postId);
       localStorage.setItem('savedJobs', JSON.stringify(saved));
@@ -291,7 +292,6 @@ export const jobAPI = {
     },
 
     getSavedJobs: async () => {
-      console.warn('⚠️ Tính năng lưu công việc dùng tạm localStorage');
       const savedIds = JSON.parse(localStorage.getItem('savedJobs') || '[]');
       if (savedIds.length === 0) {
         return Promise.resolve({ data: { code: 1000, result: [] } });

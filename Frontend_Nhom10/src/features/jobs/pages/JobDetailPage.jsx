@@ -14,6 +14,8 @@ const JobDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [isApplied, setIsApplied] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -46,8 +48,18 @@ const JobDetailPage = () => {
           companyName: jobData.companyProfile?.companyName || 'Công ty tuyển dụng',
           companyLogo: jobData.companyProfile?.avatar || 'https://via.placeholder.com/64',
           companyInfo: jobData.companyProfile?.address || 'Thông tin công ty',
-          salaryMin: jobData.salaryRequire || 0,
-          salaryMax: jobData.salaryRequire ? jobData.salaryRequire * 1.2 : 0,
+          salaryMin: (() => {
+            let min = jobData.salaryRequire || 0;
+            if (min > 0 && min < 1000) return min * 1000000;
+            if (min >= 1000 && min < 1000000) return min * 1000;
+            return min;
+          })(),
+          salaryMax: (() => {
+            let max = jobData.salaryRequire ? jobData.salaryRequire * 1.5 : 0;
+            if (max > 0 && max < 1500) return max * 1000000; // 1.5 * 1000 = 1500
+            if (max >= 1500 && max < 1500000) return max * 1000;
+            return max;
+          })(),
           location: jobData.locations?.map(l => l.name || l.city || l.province).filter(Boolean).join(', ') || 'Chưa xác định',
           industry: jobData.industry?.name || jobData.industry?.nameIndustry || 'Chưa xác định',
           deadline: jobData.deadline || 'N/A',
@@ -73,6 +85,25 @@ const JobDetailPage = () => {
       setJob(MOCK_JOB);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkIfApplied = async () => {
+    try {
+      const response = await jobAPI.getMyApplications();
+      // console.log('My applications payload:', response?.data?.result);
+      if (response?.data?.result && Array.isArray(response.data.result)) {
+        // Look for application to THIS specific jobPostingId 
+        const existingApp = response.data.result.find(
+           app => app.jobPosting?.id === id || app.jobPostingId === id
+        );
+        if (existingApp) {
+          setIsApplied(true);
+          setApplicationStatus(existingApp.status || 'Đã gửi');
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi khi kiểm tra trạng thái ứng tuyển:', err);
     }
   };
 
@@ -145,7 +176,7 @@ const JobDetailPage = () => {
         }));
         toast.success(`Đã chọn file: ${file.name}`);
       } else {
-        toast.error('File quá lớn. Vui lòng chọn file dưới 10MB');
+        toast.error('File quá lớn. Vui lòng chọn file dưới 1MB (Giới hạn của máy chủ)');
       }
     } else {
       toast.error('Vui lòng chọn file PDF hoặc DOCX');
@@ -224,23 +255,25 @@ const JobDetailPage = () => {
       }
     } catch (err) {
       console.error('❌ Error applying job:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
+      let errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
+      
+      if (typeof errorMessage === 'object') errorMessage = JSON.stringify(errorMessage);
+      errorMessage = String(errorMessage);
+      
+      if (errorMessage.includes('Uncategorized error') || err.response?.status === 413) {
+          errorMessage = 'Dung lượng file CV vượt quá giới hạn 1MB của máy chủ.';
+      } else if (errorMessage.toLowerCase().includes('already') || errorMessage.toLowerCase().includes('ứng tuyển rồi') || errorMessage.toLowerCase().includes('applied')) {    
+          errorMessage = 'Bạn đã ứng tuyển công việc này rồi!';
+          setIsApplied(true);
+      }
+
       if (err.response?.status === 401) {
-          toast.error('Phiên đăng nhập đã hết hạn', {
-            description: 'Vui lòng đăng nhập lại để ứng tuyển.',
-            duration: 6000,
-            action: {
-              label: 'Đăng nhập',
-              onClick: () => navigate('/login')
-            }
-          });
-        } else {
-          toast.error('❌ Gửi đơn ứng tuyển thất bại!', {
-            description: errorMessage,
-            duration: 5000,
-            style: { border: '1px solid #ef4444', color: '#ef4444' }
-          });
-        }
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để ứng tuyển.');
+      } else {
+        toast.error('❌ ' + errorMessage, {
+          style: { border: '1px solid #ef4444', color: '#ef4444' }
+        });
+      }
     } finally {
       setIsApplying(false);
     }
@@ -340,7 +373,7 @@ const JobDetailPage = () => {
                 <div className="bg-secondary/5 border border-secondary/20 px-6 py-4 rounded-xl text-center min-w-40">
                   <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Mức lương</p>
                   <p className="text-lg font-black text-primary">
-                    {job.salaryMin / 1000}triệu – {job.salaryMax / 1000}triệu
+                    {job.salaryMin > 0 ? `${(job.salaryMin / 1000000).toFixed(0)} triệu - ${(job.salaryMax / 1000000).toFixed(0)} triệu` : "Thỏa thuận"}
                   </p>
                 </div>
               </div>
@@ -481,7 +514,7 @@ const JobDetailPage = () => {
                         <p className="text-xs font-bold text-on-surface">
                           {formData.cv ? formData.cv.name : 'Tải lên PDF hoặc DOCX'}
                         </p>
-                        <p className="text-[10px] text-on-surface-variant mt-1">Dung lượng tối đa 10MB</p>
+                        <p className="text-[10px] text-on-surface-variant mt-1">Dung lượng tối đa 1MB (Giới hạn hệ thống)</p>
                       </label>
                     </div>
                     <button
@@ -545,6 +578,16 @@ const MOCK_JOB = {
 };
 
 export default JobDetailPage;
+
+
+
+
+
+
+
+
+
+
 
 
 

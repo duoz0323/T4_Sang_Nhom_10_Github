@@ -4,8 +4,9 @@ import { companyAPI, industryAPI } from '../../../services/api';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 
-// Mock companies data (fallback khi không có API hoặc cần admin)
-const MOCK_COMPANIES = [
+import { generateMockCompanies } from '../../../utils/mockCompanyData';
+
+export const MOCK_COMPANIES = [
   {
     companyProfileId: 'mock-1',
     companyName: 'FPT Software',
@@ -156,12 +157,31 @@ const CompanyListPage = () => {
       }
 
       const response = await industryAPI.getAll();
-      if (response?.data?.code === 1000 && response?.data?.result) {
+      if (response?.data?.code === 1000 && response?.data?.result && response.data.result.length > 0) {
         setIndustries(response.data.result);
         sessionStorage.setItem('industries', JSON.stringify(response.data.result));
+      } else {
+        const mockInd = [
+          { industryId: 1, nameIndustry: 'Công nghệ thông tin' },
+          { industryId: 2, nameIndustry: 'Tài chính - Ngân hàng' },
+          { industryId: 3, nameIndustry: 'Y tế - Sức khỏe' },
+          { industryId: 4, nameIndustry: 'Sản xuất - Cơ khí' },
+          { industryId: 5, nameIndustry: 'Giáo dục - Đào tạo' },
+          { industryId: 6, nameIndustry: 'Kinh doanh - Bán hàng' }
+        ];
+        setIndustries(mockInd);
       }
     } catch (error) {
       console.error('Error fetching industries:', error);
+      const mockInd = [
+        { industryId: 1, nameIndustry: 'Công nghệ thông tin' },
+        { industryId: 2, nameIndustry: 'Tài chính - Ngân hàng' },
+        { industryId: 3, nameIndustry: 'Y tế - Sức khỏe' },
+        { industryId: 4, nameIndustry: 'Sản xuất - Cơ khí' },
+        { industryId: 5, nameIndustry: 'Giáo dục - Đào tạo' },
+        { industryId: 6, nameIndustry: 'Kinh doanh - Bán hàng' }
+      ];
+      setIndustries(mockInd);
     }
   };
 
@@ -186,6 +206,19 @@ const CompanyListPage = () => {
           companiesData = companiesData.filter(company =>
             company.industry?.nameIndustry === selectedIndustry
           );
+        }
+
+        // --- DYNAMIC MOCK DATA INJECTION ---
+        // If no companies found after filtering by industry, generate mock companies per user request
+        if (companiesData.length === 0 && selectedIndustry) {
+          companiesData = generateMockCompanies(selectedIndustry);
+          // Apply keyword filter to the newly generated mock companies if needed
+          if (searchKeyword) {
+            companiesData = companiesData.filter(company =>
+              company.companyName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+              company.description?.toLowerCase().includes(searchKeyword.toLowerCase())
+            );
+          }
         }
 
         // Pagination
@@ -213,6 +246,14 @@ const CompanyListPage = () => {
   const fallbackToMock = () => {
     let companiesData = [...MOCK_COMPANIES];
 
+    // DYNAMIC MOCK: Make sure ALL known industries have some mock companies to display in "Tất cả"
+    industries.forEach(ind => {
+      // Check if we already have this industry in hardcoded mocks
+      if (!companiesData.find(c => c.industry?.nameIndustry === ind.nameIndustry)) {
+        companiesData = [...companiesData, ...generateMockCompanies(ind.nameIndustry)];
+      }
+    });
+
     // Filter by keyword
     if (searchKeyword) {
       const beforeFilter = companiesData.length;
@@ -229,6 +270,19 @@ const CompanyListPage = () => {
       companiesData = companiesData.filter(company =>
         company.industry?.nameIndustry === selectedIndustry
       );
+      
+      // DYNAMIC MOCK DATA INJECTION
+      // If none of our hardcoded mocks matched the selected industry, dynamically generate them!
+      if (companiesData.length === 0) {
+        companiesData = generateMockCompanies(selectedIndustry);
+        if (searchKeyword) {
+          companiesData = companiesData.filter(company =>
+            company.companyName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+            company.description?.toLowerCase().includes(searchKeyword.toLowerCase())
+          );
+        }
+      }
+      
       console.log(`🏭 Industry filter: ${beforeFilter} → ${companiesData.length} mock companies`);
     }
 
@@ -437,7 +491,7 @@ const CompanyListPage = () => {
           >
             Tất cả
           </button>
-          {industries.slice(0, 4).map((industry) => (
+          {industries.map((industry) => (
             <button
               key={industry.industryId}
               onClick={() => handleIndustryFilter(industry.nameIndustry)}

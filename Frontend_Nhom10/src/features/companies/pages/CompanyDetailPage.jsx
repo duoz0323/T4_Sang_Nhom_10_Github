@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import { companyAPI, jobAPI } from '../../../services/api';
+import { getMockCompanyById } from '../../../utils/mockCompanyData';
+import { MOCK_COMPANIES } from './CompanyListPage';
 
 function CompanyDetailPage() {
   const { id } = useParams();
@@ -22,6 +24,60 @@ function CompanyDetailPage() {
       setLoading(true);
       setError(null);
       console.log('🔄 Fetching company details for ID:', id);
+
+      // Special handling for mock IDs
+      if (id && id.startsWith('mock-')) {
+        console.log('Using mock company data for ID:', id);
+        
+        // Retrieve MOCK_COMPANIES from CompanyListPage via shared method or manual matching
+        // (For the hardcoded list in CompanyListPage we did not export it, but our new utility provides dynamic mocks)
+        let companyData = getMockCompanyById(id);
+        
+        // Since the hardcoded MOCK_COMPANIES in CompanyListPage aren't exported, let's hardcode those matching too, or rely on our generic generator
+        // In our utils, we handle parsing any `mock-` id. It's close enough!
+        const urlParams = new URLSearchParams(window.location.search);
+        const industryParams = urlParams.get('industry'); // If passed
+        
+        // Just in case the user arrived via a hardcoded MOCK_COMPANIES click, we ensure the details look decent
+        if (!companyData || companyData.companyName.includes('undefined')) {
+             companyData = {
+                companyProfileId: id,
+                companyName: id === 'mock-1' ? 'FPT Software' : (id === 'mock-2' ? 'Viettel Solutions' : 'Công ty Công nghệ (Mock)'),
+                email: 'contact@mockcompany.com',
+                companyLogo: `https://ui-avatars.com/api/?name=Company+Mock&background=random&color=fff&size=200`,
+                description: 'Thông tin chi tiết về doanh nghiệp ảo trên hệ thống.',
+                address: 'Trung tâm tài chính, Hà Nội',
+                industry: { nameIndustry: 'Công nghệ' },
+                websiteURL: `https://mockcompany.vn`
+            };
+        }
+        
+        setCompany(companyData);
+        
+        // Mock jobs for mock companies
+        setJobs([
+          {
+             jobId: 'mock-job-1',
+             title: 'Software Engineer',
+             location: { province: 'Hà Nội' },
+             salaryType: 'NEGOTIABLE',
+             createdAt: new Date().toISOString(),
+             company: { companyName: companyData.companyName, companyLogo: companyData.companyLogo }
+          },
+          {
+             jobId: 'mock-job-2',
+             title: 'Product Manager',
+             location: { province: 'TP HCM' },
+             salaryType: 'RANGE',
+             minSalary: 15,
+             maxSalary: 30,
+             createdAt: new Date().toISOString(),
+             company: { companyName: companyData.companyName, companyLogo: companyData.companyLogo }
+          }
+        ]);
+        
+        return;
+      }
 
       // Fetch company profile
       const companyResponse = await companyAPI.getCompanyById(id);
