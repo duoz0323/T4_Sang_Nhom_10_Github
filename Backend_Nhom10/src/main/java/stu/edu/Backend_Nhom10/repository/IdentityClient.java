@@ -18,8 +18,10 @@ public interface IdentityClient {
             value = "/realms/${idp.realm}/protocol/openid-connect/token",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     TokenExchangeResponse exchangeToken(@RequestBody Map<String, ?> param);
-
-
+    @PostMapping(
+            value = "/realms/${idp.realm}/protocol/openid-connect/logout",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    void logout(@RequestBody Map<String, ?> param);
     @PostMapping(value = "/admin/realms/${idp.realm}/users", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<?> createUser(@RequestHeader("Authorization") String token, @RequestBody UserCreationParam param);
 

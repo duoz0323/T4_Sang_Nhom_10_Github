@@ -15,9 +15,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://lemur-14.cloud-iam.com/auth/realms/webtuyendung-nhom10
+          issuer-uri: https://lemur-10.cloud-iam.com/auth/realms/webtuyendung-nhom10
 idp:
-  url: https://lemur-14.cloud-iam.com/auth
+  url: https://lemur-10.cloud-iam.com/auth
   client-id: webtuyendung_id
-  client-secret: QiLoWw2to5vHqdlrqUUPOeKr0CyPkB6L
+  client-secret: ANvD8KzGm1CLfXCPJyxI9yVseVUHr2i3
   realm: webtuyendung-nhom10

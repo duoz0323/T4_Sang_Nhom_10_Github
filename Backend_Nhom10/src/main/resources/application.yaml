@@ -5,5 +5,3 @@ spring:
     name: Backend_Nhom10
 server:
   port: 8080
-  servlet:
-    context-path: /api

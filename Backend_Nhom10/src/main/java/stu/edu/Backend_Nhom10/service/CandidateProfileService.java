@@ -6,6 +6,7 @@ import stu.edu.Backend_Nhom10.dto.identity.UserCreationParam;
 import stu.edu.Backend_Nhom10.dto.identity.RoleRepresentation;
 import stu.edu.Backend_Nhom10.dto.request.LoginRequest;
 import stu.edu.Backend_Nhom10.dto.request.CandidateProfileRequest;
+import stu.edu.Backend_Nhom10.dto.request.RefreshTokenRequest;
 import stu.edu.Backend_Nhom10.dto.request.RegistrationCandidateRequest;
 import stu.edu.Backend_Nhom10.dto.response.CandidateProfileResponse;
 import stu.edu.Backend_Nhom10.entity.CandidateProfile;
@@ -134,22 +135,7 @@ public class CandidateProfileService {
         }
     }
 
-    public TokenExchangeResponse login(@Valid LoginRequest request) {
-        try {
-            Map<String, String> params = new HashMap<>();
-            params.put("grant_type", "password");
-            params.put("client_id", clientId);
-            params.put("client_secret", clientSecret);
-            //dùng email thay username
-            params.put("username",  request.getEmail());
-            params.put("password", request.getPassword());
-            params.put("scope", "openid");
 
-            return identityClient.exchangeToken(params);
-        } catch (FeignException exception) {
-            throw errorNormalizer.handleKeyCloakException(exception);
-        }
-    }
 
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteProfile(String profileId) {

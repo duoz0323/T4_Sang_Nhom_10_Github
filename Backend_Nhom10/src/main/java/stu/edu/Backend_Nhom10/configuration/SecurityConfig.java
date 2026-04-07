@@ -18,9 +18,11 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/company_profile/register",
-            "/company_profile/login",
+            "/company_profile/refresh_token",
             "/candidate_profile/register",
-            "/candidate_profile/login"
+            "/auth/login",
+            "/auth/refresh_token",
+            "/auth/logout"
     };
 
     @Bean

@@ -132,22 +132,6 @@ public class CompanyProfileService {
         }
     }
 
-    public TokenExchangeResponse login(@Valid LoginRequest request) {
-        try {
-            Map<String, String> params = new HashMap<>();
-            params.put("grant_type", "password");
-            params.put("client_id", clientId);
-            params.put("client_secret", clientSecret);
-            //login = email
-            params.put("username", request.getEmail());
-            params.put("password", request.getPassword());
-            params.put("scope", "openid");
-
-            return identityClient.exchangeToken(params);
-        } catch (FeignException exception) {
-            throw errorNormalizer.handleKeyCloakException(exception);
-        }
-    }
 
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteProfile(String profileId) {
