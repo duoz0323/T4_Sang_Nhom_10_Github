@@ -5,7 +5,6 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import LoginPage from "./features/auth/pages/LoginPage.jsx";
 import RegisterPage from "./features/auth/pages/RegisterPage.jsx";
-import UsersManagementPage from "./features/admin/pages/UsersManagementPage.jsx";
 import HomePage from "./features/home/pages/HomePage.jsx";
 import JobListPage from "./features/jobs/pages/JobListPage.jsx";
 import JobDetailPage from "./features/jobs/pages/JobDetailPage.jsx";
@@ -105,28 +104,11 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/dashboard" 
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <UsersManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/users" 
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <UsersManagementPage />
-              </ProtectedRoute>
-            } 
-          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
   )
+
 }
 
-export default App
+export default App;
