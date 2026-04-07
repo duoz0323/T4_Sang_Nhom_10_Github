@@ -30,7 +30,7 @@ public class SecurityConfig {
             "/locations/search"
     };
 
-     @Bean
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
                 .requestMatchers(

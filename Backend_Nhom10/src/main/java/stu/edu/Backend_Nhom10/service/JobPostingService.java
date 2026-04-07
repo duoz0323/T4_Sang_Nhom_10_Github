@@ -120,43 +120,9 @@ public class JobPostingService {
     }
     //=================CANDIDATE==============
 
-    public List<JobPostingResponse> getAllActive(String keyword, Long locationId, Long industryId,
-                                                  Long minSalary, Long maxSalary, String workingFormat,
-                                                  Integer page, Integer size) {
-        // Get all active jobs
-        List<JobPosting> allJobs = jobPostingRepository.findByStatusAndDeadlineAfter(Status.ACTIVE, LocalDate.now());
-
-        // Apply filters
-        List<JobPosting> filteredJobs = allJobs.stream()
-                // Filter by keyword (title or description)
-                .filter(job -> keyword == null || keyword.isEmpty() ||
-                        job.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
-                        (job.getDescription() != null && job.getDescription().toLowerCase().contains(keyword.toLowerCase())))
-                // Filter by location
-                .filter(job -> locationId == null ||
-                        job.getLocations().stream().anyMatch(loc -> loc.getId().equals(locationId)))
-                // Filter by industry
-                .filter(job -> industryId == null ||
-                        (job.getIndustry() != null && job.getIndustry().getId().equals(industryId)))
-                // Filter by salary range
-                .filter(job -> (minSalary == null || job.getSalaryRequire() >= minSalary) &&
-                              (maxSalary == null || job.getSalaryRequire() <= maxSalary))
-                // Filter by working format (if needed - might need to check entity structure)
-                .filter(job -> workingFormat == null || workingFormat.isEmpty() ||
-                        (job.getWorkingFormat() != null && job.getWorkingFormat().equalsIgnoreCase(workingFormat)))
-                .toList();
-
-        // Apply pagination
-        int pageNum = page != null ? page : 0;
-        int pageSize = size != null ? size : 20;
-        int startIdx = pageNum * pageSize;
-        int endIdx = Math.min(startIdx + pageSize, filteredJobs.size());
-
-        if (startIdx >= filteredJobs.size()) {
-            return new ArrayList<>();
-        }
-
-        return filteredJobs.subList(startIdx, endIdx).stream()
+    public List<JobPostingResponse> getAllActive() {
+        return jobPostingRepository.findByStatusAndDeadlineAfter(Status.ACTIVE,LocalDate.now())
+                .stream()
                 .map(jobPostingMapper::toJobPostingResponse)
                 .toList();
     }

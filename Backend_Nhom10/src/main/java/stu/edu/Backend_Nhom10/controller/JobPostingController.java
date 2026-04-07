@@ -58,17 +58,9 @@ public class JobPostingController {
                 .build();
     }
     @GetMapping("/public")
-    public ApiResponse<List<JobPostingResponse>> getAllActive(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long locationId,
-            @RequestParam(required = false) Long industryId,
-            @RequestParam(required = false) Long minSalary,
-            @RequestParam(required = false) Long maxSalary,
-            @RequestParam(required = false) String workingFormat,
-            @RequestParam(required = false, defaultValue = "0") Integer page,
-            @RequestParam(required = false, defaultValue = "20") Integer size) {
+    public ApiResponse<List<JobPostingResponse>> getAllActive() {
         return ApiResponse.<List<JobPostingResponse>>builder()
-                .result(jobPostingService.getAllActive(keyword, locationId, industryId, minSalary, maxSalary, workingFormat, page, size))
+                .result(jobPostingService.getAllActive())
                 .build();
     }
     @GetMapping("/{id}")
