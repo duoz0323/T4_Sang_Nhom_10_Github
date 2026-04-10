@@ -20,11 +20,11 @@ public class SecurityConfig {
             "/company_profile/register",
             "/company_profile/refresh_token",
             "/candidate_profile/register",
-            "/candidate_profile/login",
-            "/applications/public",
             "/auth/login",
             "/auth/refresh_token",
-            "/auth/logout"
+            "/auth/logout",
+            "/candidate_profile/login",
+            "/applications/public"
     };
 
     private final String[] PUBLIC_GET_ENDPOINTS = {
