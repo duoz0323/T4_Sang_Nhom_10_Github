@@ -5,6 +5,7 @@ import Footer from '../../../components/layout/Footer';
 import { companyAPI, jobAPI } from '../../../services/api';
 import { getMockCompanyById } from '../../../utils/mockCompanyData';
 import { MOCK_COMPANIES } from './CompanyListPage';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 function CompanyDetailPage() {
   const { id } = useParams();
@@ -23,11 +24,11 @@ function CompanyDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Fetching company details for ID:', id);
 
-      // Special handling for mock IDs
+
+      // Cú pháp xử lý đặc biệt cho danh sách tĩnh (mock ID)
       if (id && id.startsWith('mock-')) {
-        console.log('Using mock company data for ID:', id);
+
         
         // Retrieve MOCK_COMPANIES from CompanyListPage via shared method or manual matching
         // (For the hardcoded list in CompanyListPage we did not export it, but our new utility provides dynamic mocks)
@@ -79,9 +80,9 @@ function CompanyDetailPage() {
         return;
       }
 
-      // Fetch company profile
+      // Lấy dữ liệu hồ sơ công ty
       const companyResponse = await companyAPI.getCompanyById(id);
-      console.log('📋 Company response:', companyResponse);
+
 
       if (companyResponse?.data?.result) {
         const companyData = companyResponse.data.result;
@@ -90,7 +91,7 @@ function CompanyDetailPage() {
         // Fetch jobs for this company
         try {
           const jobsResponse = await jobAPI.getAllActiveJobs({ companyId: id });
-          console.log('📋 Jobs response:', jobsResponse);
+
           
           if (jobsResponse?.data?.result && Array.isArray(jobsResponse.data.result)) {
             setJobs(jobsResponse.data.result);
@@ -98,14 +99,14 @@ function CompanyDetailPage() {
             setJobs([]);
           }
         } catch (jobErr) {
-          console.warn('⚠️ Could not fetch jobs for company:', jobErr);
+          console.warn('Could not fetch jobs for company:', jobErr);
           setJobs([]); // Continue without jobs
         }
       } else {
         throw new Error('Không tìm thấy thông tin công ty');
       }
     } catch (err) {
-      console.error('❌ Error fetching company data:', err);
+      console.error('Error fetching company data:', err);
       setError(err.message || 'Không thể tải thông tin công ty');
     } finally {
       setLoading(false);
@@ -116,12 +117,7 @@ function CompanyDetailPage() {
     return (
       <div className="min-h-screen bg-surface">
         <Header />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-on-surface-variant">Đang tải...</p>
-          </div>
-        </div>
+        <LoadingSpinner text="Đang tải thông tin chi tiết nhà tuyển dụng..." fullPage={true} />
         <Footer />
       </div>
     );

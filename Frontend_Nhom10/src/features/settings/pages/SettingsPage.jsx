@@ -43,7 +43,7 @@ function SettingsPage() {
         setProfile(response.data.result);
       }
     } catch (err) {
-      console.error('❌ Error fetching profile:', err);
+      console.error('Error fetching profile:', err);
     }
   };
 
@@ -106,7 +106,7 @@ function SettingsPage() {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
-      console.error('❌ Error changing password:', err);
+      console.error('Error changing password:', err);
       const errorMessage = err.response?.data?.message || 'Không thể thay đổi mật khẩu';
       toast.error(errorMessage);
     } finally {

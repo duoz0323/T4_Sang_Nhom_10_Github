@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { jobAPI, locationAPI, industryAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';import { MOCK_LOCATIONS, MOCK_INDUSTRIES } from '../../../constants';import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 const JobListPage = () => {
   const { isAuthenticated } = useAuth();
@@ -29,17 +30,17 @@ const JobListPage = () => {
   // ✅ PARALLEL FETCHING - Load locations, industries, and jobs simultaneously
   useEffect(() => {
     const initializeData = async () => {
-      // Check cache first
+      // Kiểm tra cache trước
       const cachedLocations = sessionStorage.getItem('locations');
       const cachedIndustries = sessionStorage.getItem('industries');
       
       // Prepare promises for parallel execution
       const promises = [];
       
-      // Only fetch if not cached
+      // Chỉ gọi API nếu chưa được lưu trong cache
       if (!cachedLocations) {
         promises.push(
-          locationAPI.getAll()
+          locationAPI.search('')
             .then(response => {
               if (response?.data?.code === 1000 && response?.data?.result) {
                 setLocations(response.data.result);
@@ -49,7 +50,7 @@ const JobListPage = () => {
                 }
               })
               .catch(err => {
-                console.warn('⚠️ Cannot fetch locations (need login):', err.response?.status);
+                console.warn('Cannot fetch locations (need login):', err.response?.status);
                 setLocations(MOCK_LOCATIONS);
               })
           );
@@ -69,7 +70,7 @@ const JobListPage = () => {
                 }
               })
               .catch(err => {
-                console.warn('⚠️ Cannot fetch industries (need login):', err.response?.status);
+                console.warn('Cannot fetch industries (need login):', err.response?.status);
                 setIndustries(MOCK_INDUSTRIES);
               })
           );
@@ -79,7 +80,7 @@ const JobListPage = () => {
 
       promises.push(fetchJobs());
       
-      // Execute all in parallel
+      // Khởi chạy tất cả cùng lúc (parallel)
       await Promise.all(promises);
     };
     
@@ -171,7 +172,7 @@ const JobListPage = () => {
           // Cache all jobs for faster pagination
           sessionStorage.setItem('allJobs', JSON.stringify(mappedJobs));
         } else {
-          console.warn('⚠️ Unexpected response format (not an array):', jobsFromAPI);
+          console.warn('Unexpected response format (not an array):', jobsFromAPI);
           setJobs([]);
           setTotalPages(0);
           setTotalElements(0);
@@ -182,8 +183,8 @@ const JobListPage = () => {
         setTotalElements(0);
       }
     } catch (err) {
-      console.error('❌ API error:', err);
-      console.error('❌ Error details:', {
+      console.error('API error:', err);
+      console.error('Error details:', {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status
@@ -266,7 +267,7 @@ const JobListPage = () => {
         });
       }
     } catch (err) {
-      console.error('❌ Error toggling save job:', err);
+      console.error('Error toggling save job:', err);
       alert('Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
@@ -482,27 +483,11 @@ const JobListPage = () => {
             {/* Thẻ công việc với khoảng trắng nhiều hơn */}
             <div className="grid grid-cols-1 gap-8">
               {loading ? (
-                // ✅ LOADING SKELETON - Better UX during data fetch
-                <>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="bg-white p-6 rounded-xl border border-slate-100 animate-pulse">
-                      <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="w-20 h-20 rounded-xl bg-slate-200"></div>
-                        <div className="flex-1 space-y-4 w-full">
-                          <div className="h-8 bg-slate-200 rounded w-3/4"></div>
-                          <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-                          <div className="grid grid-cols-3 gap-6">
-                            <div className="h-12 bg-slate-200 rounded"></div>
-                            <div className="h-12 bg-slate-200 rounded"></div>
-                            <div className="h-12 bg-slate-200 rounded"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
+                <div className="py-12 flex justify-center">
+                  <LoadingSpinner text="Đang tải danh sách việc làm..." />
+                </div>
               ) : jobs.length === 0 ? (
-                // Empty state
+  // Trạng thái trống
                 <div className="text-center py-16">
                   <div className="text-6xl mb-4">🔍</div>
                   <h3 className="text-2xl font-bold text-slate-700 mb-2">Không tìm thấy công việc phù hợp</h3>
@@ -515,7 +500,7 @@ const JobListPage = () => {
                   </button>
                 </div>
               ) : (
-                // Job cards
+                // Thẻ hiển thị công việc
                 jobs.map((job) => (
                   <div key={job.jobPostingId} className="job-card bg-white p-6 rounded-xl border border-slate-100 relative group hover:shadow-xl hover:border-secondary/30 transition-all duration-300 ease-in-out cursor-pointer">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -649,3 +634,5 @@ const JobListPage = () => {
 };
 
 export default JobListPage;
+
+

@@ -29,7 +29,7 @@ const RegisterPage = () => {
     setError('');
     setSuccess(false);
 
-    // Validation
+    // Kiểm tra tính hợp lệ
     if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu không khớp!');
       return;
@@ -49,7 +49,7 @@ const RegisterPage = () => {
       let result;
       
       if (activeTab === 'candidate') {
-        // Register as Candidate
+        // Đăng ký ứng viên
         const candidateData = {
           email: formData.email,
           password: formData.password,
@@ -58,7 +58,7 @@ const RegisterPage = () => {
         };
         result = await authService.registerCandidate(candidateData);
       } else {
-        // Register as Company
+        // Đăng ký doanh nghiệp
         const companyData = {
           email: formData.email,
           password: formData.password,
@@ -70,7 +70,7 @@ const RegisterPage = () => {
       
       if (result.success) {
         setSuccess(true);
-        // Redirect to login after 2 seconds
+        // Chuyển hướng đến đăng nhập sau 2 giây
         setTimeout(() => {
           navigate('/login');
         }, 2000);
@@ -90,7 +90,7 @@ const RegisterPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Clear messages when user types
+    // Xóa thông báo khi người dùng gõ
     if (error) setError('');
     if (success) setSuccess(false);
   };

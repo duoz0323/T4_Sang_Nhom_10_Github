@@ -4,8 +4,11 @@
 @theme {
   --color-primary: #002045;
   --color-primary-container: #1a365d;
+  --color-primary-fixed: #d6e8fc;
+  --color-primary-fixed-dim: #b3c5e0;
   --color-on-primary: #ffffff;
   --color-on-primary-container: #86a0cd;
+  --color-on-primary-fixed: #00152e;
   
   --color-secondary: #13696a;
   --color-secondary-container: #a2eded;

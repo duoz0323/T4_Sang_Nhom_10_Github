@@ -25,24 +25,24 @@ const LoginPage = () => {
       let result;
       
       // Auto-detect role: Try candidate first, then company
-      // Backend will return correct role in token
+      // Backend sẽ trả về role chính xác trong token
       result = await authService.loginCandidate(formData.email, formData.password);
       
       // If candidate login fails, try company login
       if (!result.success) {
-        console.log('🔄 Candidate login failed, trying company...');
+
         result = await authService.loginCompany(formData.email, formData.password);
       }
       
       if (result.success) {
-        // Get user data from localStorage (already saved by authService)
+        // Lấy dữ liệu người dùng từ localStorage (already saved by authService)
         const user = authService.getCurrentUser();
         
-        // Update AuthContext
+        // Cập nhật bối cảnh xác thực (AuthContext)
         if (user) {
           login(user);
           
-          // Redirect based on actual role from user object (not context)
+          // Chuyển hướng dựa trên vai trò thực tế from user object (not context)
           let homePath = '/';
           if (user.role === 'ADMIN') {
             homePath = '/admin/dashboard';
@@ -50,7 +50,7 @@ const LoginPage = () => {
             homePath = '/company/dashboard';
           } // APPLICANT/CANDIDATE → '/'
           
-          console.log('🏠 Redirecting to:', homePath, '- Role:', user.role);
+
           navigate(homePath, { replace: true });
         } else {
           // Fallback redirect
@@ -72,7 +72,7 @@ const LoginPage = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
-    // Clear error when user types
+    // Xóa lỗi khi người dùng gõ
     if (error) setError('');
   };
 

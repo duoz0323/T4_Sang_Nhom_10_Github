@@ -16,7 +16,10 @@ import SettingsPage from "./features/settings/pages/SettingsPage.jsx";
 import CompanyDashboard from "./features/company/pages/CompanyDashboard.jsx";
 import CompanyProfilePage from "./features/company/pages/CompanyProfilePage.jsx";
 import CompanySettingsPage from "./features/company/pages/CompanySettingsPage.jsx";
+import CompanyManageJobsPage from "./features/company/pages/CompanyManageJobsPage.jsx";
+import CompanyCreateJobPage from "./features/company/pages/CompanyCreateJobPage.jsx";
 import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePage.jsx";
+import CompanyManageCandidatesPage from './features/company/pages/CompanyManageCandidatesPage';
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage.jsx";
 import BlogPage from "./features/blog/pages/BlogPage.jsx";
 import './App.css'
@@ -81,16 +84,48 @@ function App() {
           />
           
           {/* Company Routes */}
-          <Route 
-            path="/company/dashboard" 
+          <Route
+            path="/company/dashboard"
             element={
               <ProtectedRoute requiredRole="COMPANY">
                 <CompanyDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/company/profile" 
+          <Route
+            path="/company/manage-jobs"
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanyManageJobsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/create-job"
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanyCreateJobPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/edit-job/:id"
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanyCreateJobPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/candidates"
+            element={
+              <ProtectedRoute requiredRole="COMPANY">
+                <CompanyManageCandidatesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/profile"
             element={
               <ProtectedRoute requiredRole="COMPANY">
                 <CompanyProfilePage />
@@ -131,3 +166,6 @@ function App() {
 }
 
 export default App;
+
+
+

@@ -63,7 +63,7 @@ export const autoLoginAsGuest = async () => {
     
     return false;
   } catch (error) {
-    console.error('❌ Guest login error:', error);
+    console.error('Guest login error:', error);
     return false;
   }
 };

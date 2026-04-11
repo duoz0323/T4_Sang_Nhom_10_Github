@@ -7,9 +7,9 @@ function CompanySidebar() {
   
   const menuItems = [
     { path: '/company/dashboard', icon: 'dashboard', label: 'Bảng điều khiển' },
-    { path: '/company/post-job', icon: 'add_circle', label: 'Đăng tin tuyển' },
+    { path: '/company/create-job', icon: 'add_circle', label: 'Đăng tin tuyển' }, 
     { path: '/company/manage-jobs', icon: 'list_alt', label: 'Quản lý tin đăng' },
-    { path: '/company/applicants', icon: 'group', label: 'Quản lý ứng viên' },
+    { path: '/company/candidates', icon: 'group', label: 'Quản lý ứng viên' },  
     { path: '/company/profile', icon: 'business', label: 'Hồ sơ công ty' },
     { path: '/company/settings', icon: 'settings', label: 'Cài đặt' }
   ];

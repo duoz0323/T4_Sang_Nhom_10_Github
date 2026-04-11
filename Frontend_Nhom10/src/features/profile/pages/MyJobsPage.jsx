@@ -12,12 +12,11 @@ export default function MyJobsPage() {
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Fetch data
+  // Lấy dữ liệu
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Fetch applied jobs
+      // Tải danh sách công việc đã ứng tuyển
       try {
         const appliedResponse = await jobAPI.getMyApplications();
         setAppliedJobs(appliedResponse.data?.result?.content || []);
@@ -25,7 +24,7 @@ export default function MyJobsPage() {
         console.error("Lỗi khi tải việc làm đã ứng tuyển:", err);
       }
 
-      // Fetch saved jobs
+      // Tải danh sách công việc đã lưu
       try {
         const savedResponse = await jobAPI.getSavedJobs();
         setSavedJobs(savedResponse.data?.result || []);
@@ -58,13 +57,13 @@ export default function MyJobsPage() {
     navigate(`/jobs/${jobId}`);
   };
 
-  // Format amount
+  // Định dạng số tiền
   const formatSalary = (amount) => {
     if (!amount) return "Thoả thuận";
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
   };
   
-  // Format Date
+  // Định dạng ngày tháng
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);

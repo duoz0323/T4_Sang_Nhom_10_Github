@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL cơ sở API từ biến môi trường
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Tạo instance axios
 const api = axios.create({
@@ -17,22 +17,20 @@ api.interceptors.request.use(
     const url = config.url || '';
     
     const publicEndpoints = [
-      '/candidate_profile/login',
+      '/auth/login',
       '/candidate_profile/register',
-      '/company_profile/login',
       '/company_profile/register',
       '/posts/public',
-      '/posts/',
       '/candidate_profile/profiles',
       '/company_profile/profiles'
     ];
-    
-    const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint));
-    
+
+const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint)) ||
+                             (url.includes('/posts/') && !url.includes('/posts/my-jobs') && !url.includes('/posts/create') && !url.includes('/posts/update') && !url.includes('/posts/delete') && !url.includes('/close') && !url.includes('/reopen'));
+
     if (!isPublicEndpoint) {
-      const token = localStorage.getItem('accessToken') || 
-                    localStorage.getItem('token') || 
-                    sessionStorage.getItem('temp_guest_token') ||
+      const token = localStorage.getItem('token') || 
+                    sessionStorage.getItem('token') || 
                     sessionStorage.getItem('temp_company_token');
       
       if (token) {
@@ -48,37 +46,115 @@ api.interceptors.request.use(
 );
 
 // Response interceptor - Xử lý lỗi
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Các endpoint không cần tự động làm mới token
     const authEndpoints = [
-      '/candidate_profile/login',
+      '/auth/login',
+      '/auth/refresh_token',
+      '/company_profile/refresh_token',
       '/candidate_profile/register',
-      '/company_profile/login',
       '/company_profile/register'
     ];
-    
-    const isAuthEndpoint = authEndpoints.some(endpoint => 
-      error.config?.url?.includes(endpoint)
+
+    const isAuthEndpoint = authEndpoints.some(endpoint =>
+      originalRequest?.url?.includes(endpoint)
     );
-    
-    if (error.response?.status === 401 && !isAuthEndpoint) {
-      console.error(`❌ 401 Unauthorized on ${error.config?.url}`);
+
+    // Nếu lỗi 401 không nằm ở các public auth endpoint và chưa thử retry
+    if (error.response?.status === 401 && !isAuthEndpoint && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Đợi token mới
+        try {
+          const token = await new Promise(function(resolve, reject) {
+            failedQueue.push({ resolve, reject });
+          });
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return api(originalRequest);
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = localStorage.getItem('refreshToken');
       
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('token');
+      if (refreshToken) {
+        try {
+          console.log('Đang thử làm mới token...');
+          const response = await axios.post(`${API_BASE_URL}/auth/refresh_token`, { refreshToken });
+          
+          if (response.data?.code === 1000 && response.data?.result) {
+            const { access_token, refresh_token } = response.data.result;
+            
+            localStorage.setItem('token', access_token);
+            localStorage.setItem('accessToken', access_token);
+            if (refresh_token) {
+              localStorage.setItem('refreshToken', refresh_token);
+            }
+            
+            // Cập nhật header cho request này và gửi lại
+            originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
+            processQueue(null, access_token);
+            return api(originalRequest);
+          }
+        } catch (err) {
+          console.error('Làm mới token thất bại:', err);
+          processQueue(err, null);
+          
+          // Xoá thông tin Auth
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('userType');
+          // Chờ cho người dùng nhấn điều hướng hoặc chuyển trang chủ động
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        console.error(`401 Unauthorized trên ${originalRequest?.url}, không có refreshToken`);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
+      }
     }
+    
     return Promise.reject(error);
   }
 );
 
 // API Xác thực
 export const authAPI = {
-  // Đăng nhập ứng viên
+  // Đăng nhập chung
+  login: (credentials) => {
+    return api.post('/auth/login', credentials);
+  },
+
+  // Đăng nhập ứng viên (tạm giữ để không log lỗi, nhưng ref_to login chung)
   loginCandidate: (credentials) => {
-    return api.post('/candidate_profile/login', credentials);
+    return api.post('/auth/login', credentials);
   },
 
   // Đăng ký ứng viên
@@ -86,9 +162,9 @@ export const authAPI = {
     return api.post('/candidate_profile/register', data);
   },
 
-  // Đăng nhập công ty
+  // Đăng nhập công ty (tạm giữ, gọi auth/login)
   loginCompany: (credentials) => {
-    return api.post('/company_profile/login', credentials);
+    return api.post('/auth/login', credentials);
   },
 
   // Đăng ký công ty
@@ -245,7 +321,12 @@ export const jobAPI = {
   },
 
   // Mở lại công việc
-  reopenJob: (id) => {
+  deleteJob: (id) => {
+      return api.delete(`/posts/${id}`);
+    },
+
+    // Mở lại công việc
+    reopenJob: (id) => {
     return api.put(`/posts/${id}/reopen`);
   },
 
@@ -275,13 +356,27 @@ export const jobAPI = {
     return api.get('/applications/me');
   },
 
+// Tính năng thêm (nếu backend hỗ trợ)
   saveJob: (postId) => {
-      const saved = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-      if (!saved.includes(postId)) {
-        saved.push(postId);
-        localStorage.setItem('savedJobs', JSON.stringify(saved));
-      }
-      return Promise.resolve({ data: { code: 1000, result: null } });
+    const saved = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    if (!saved.includes(postId)) {
+      saved.push(postId);
+      localStorage.setItem('savedJobs', JSON.stringify(saved));
+    }
+    return Promise.resolve({ data: { code: 1000, result: null } });
+  },
+  
+  // Xem danh sách ứng viên cho một bài đăng
+  getApplicationsByJobId: (jobId) => {
+    return api.get(`/applications/job/${jobId}`);
+  },
+
+  acceptApplication: (id) => {
+      return api.patch(`/applications/${id}/accept`, {});
+    },
+
+    rejectApplication: (id) => {
+      return api.patch(`/applications/${id}/reject`, {});
     },
 
     unsaveJob: (postId) => {
