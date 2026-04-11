@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
   // Nếu có yêu cầu role cụ thể
   if (requiredRole) {
-    // Check single role hoặc array of roles
+    // Kiểm tra quyền truy cập (theo nhóm hoặc theo một quyền)
     const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
     if (!allowedRoles.includes(user?.role)) {

@@ -193,7 +193,7 @@ const CompanyListPage = () => {
       if (response?.data?.code === 1000 && response?.data?.result && response.data.result.length > 0) {
         let companiesData = response.data.result;
 
-        // Filter by keyword
+        // Lọc theo từ khóa
         if (searchKeyword) {
           companiesData = companiesData.filter(company =>
             company.companyName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
@@ -201,7 +201,7 @@ const CompanyListPage = () => {
           );
         }
 
-        // Filter by industry
+        // Lọc theo ngành nghề
         if (selectedIndustry) {
           companiesData = companiesData.filter(company =>
             company.industry?.nameIndustry === selectedIndustry
@@ -221,22 +221,22 @@ const CompanyListPage = () => {
           }
         }
 
-        // Pagination
+        // Phân trang
         const startIndex = currentPage * companiesPerPage;
         const endIndex = startIndex + companiesPerPage;
         const paginatedCompanies = companiesData.slice(startIndex, endIndex);
 
-        console.log(`📄 Page ${currentPage + 1}: Showing ${paginatedCompanies.length} of ${companiesData.length} API companies`);
+
 
         setCompanies(paginatedCompanies);
         setTotalPages(Math.ceil(companiesData.length / companiesPerPage));
       } else {
-        console.warn("⚠️ API returned no data, falling back to mock");
+        console.warn("API returned no data, falling back to mock");
         fallbackToMock();
       }
     } catch (error) {
-      console.error('❌ Error fetching companies:', error);
-      console.warn("⚠️ API failed (maybe 401 Unauthorized), falling back to mock");
+      console.error('Error fetching companies:', error);
+      console.warn("API failed (maybe 401 Unauthorized), falling back to mock");
       fallbackToMock();
     } finally {
       setLoading(false);
@@ -254,17 +254,17 @@ const CompanyListPage = () => {
       }
     });
 
-    // Filter by keyword
+    // Lọc theo từ khóa
     if (searchKeyword) {
       const beforeFilter = companiesData.length;
       companiesData = companiesData.filter(company =>
         company.companyName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
         company.description?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
-      console.log(`🔍 Keyword filter: ${beforeFilter} → ${companiesData.length} mock companies`);
+
     }
 
-    // Filter by industry
+    // Lọc theo ngành nghề
     if (selectedIndustry) {
       const beforeFilter = companiesData.length;
       companiesData = companiesData.filter(company =>
@@ -283,15 +283,15 @@ const CompanyListPage = () => {
         }
       }
       
-      console.log(`🏭 Industry filter: ${beforeFilter} → ${companiesData.length} mock companies`);
+
     }
 
-    // Pagination
+    // Phân trang
     const startIndex = currentPage * companiesPerPage;
     const endIndex = startIndex + companiesPerPage;
     const paginatedCompanies = companiesData.slice(startIndex, endIndex);
 
-    console.log(`📄 Page ${currentPage + 1}: Showing ${paginatedCompanies.length} of ${companiesData.length} mock companies`);
+
 
     setCompanies(paginatedCompanies);
     setTotalPages(Math.ceil(companiesData.length / companiesPerPage));

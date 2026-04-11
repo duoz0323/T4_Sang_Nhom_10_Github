@@ -5,6 +5,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { MOCK_LOCATIONS, MOCK_INDUSTRIES } from '../../../constants';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 const MOCK_JOBS = [
   {
@@ -72,7 +73,7 @@ const HomePage = () => {
   // Lấy địa điểm và ngành nghề (từ cache trước)
   useEffect(() => {
     const fetchData = async () => {
-      // Check cache first
+      // Kiểm tra cache trước
       const cachedLocations = sessionStorage.getItem('locations');
       const cachedIndustries = sessionStorage.getItem('industries');
       
@@ -87,7 +88,7 @@ const HomePage = () => {
       setFiltersLoading(true);
       try {
         const [locationsRes, industriesRes] = await Promise.all([
-          locationAPI.getAll().catch(() => ({ data: { code: 1000, result: MOCK_LOCATIONS } })),
+          locationAPI.search('').catch(() => ({ data: { code: 1000, result: MOCK_LOCATIONS } })),
           industryAPI.getAll().catch(() => ({ data: { code: 1000, result: MOCK_INDUSTRIES } }))
         ]);
 
@@ -103,7 +104,7 @@ const HomePage = () => {
           sessionStorage.setItem('industries', JSON.stringify(inds));
         }
       } catch (err) {
-        console.error('❌ Error fetching filter data:', err);
+        console.error('Error fetching filter data:', err);
         // Fallback to MOCK when error is thrown directly
         setLocations(MOCK_LOCATIONS);
         setIndustries(MOCK_INDUSTRIES);
@@ -133,7 +134,7 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      // Check cache first for instant display
+      // Ưu tiên kiểm tra cache (bộ nhớ tạm) để hiển thị ngay
       const cachedJobs = sessionStorage.getItem('homepage_top_jobs');
       if (cachedJobs) {
         setJobs(JSON.parse(cachedJobs));
@@ -164,7 +165,7 @@ const HomePage = () => {
           if (!cachedJobs) setJobs([]);
         }
       } catch (err) {
-        console.error('❌ Error fetching jobs:', err);
+        console.error('Error fetching jobs:', err);
         setError('Có lỗi xảy ra khi tải dữ liệu');
         setJobs([]);
       } finally {
@@ -425,22 +426,9 @@ const HomePage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading ? (
-                // Bộ xương tải
-                [...Array(3)].map((_, index) => (
-                  <div key={index} className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-14 h-14 rounded-xl bg-surface-container"></div>
-                      <div className="h-6 w-20 bg-surface-container rounded-full"></div>
-                    </div>
-                    <div className="h-6 bg-surface-container rounded mb-2 w-3/4"></div>
-                    <div className="h-4 bg-surface-container rounded mb-5 w-1/2"></div>
-                    <div className="flex gap-2 mb-6">
-                      <div className="h-6 w-20 bg-surface-container rounded-lg"></div>
-                      <div className="h-6 w-16 bg-surface-container rounded-lg"></div>
-                    </div>
-                    <div className="h-12 bg-surface-container rounded"></div>
-                  </div>
-                ))
+                <div className="col-span-full py-12 flex justify-center">
+                  <LoadingSpinner text="Đang tải danh sách việc làm..." />
+                </div>
               ) : error ? (
                 // Trạng thái lỗi
                 <div className="col-span-full text-center py-12">
@@ -542,3 +530,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

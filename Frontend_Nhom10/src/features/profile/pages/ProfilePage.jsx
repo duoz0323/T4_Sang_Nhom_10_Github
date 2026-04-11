@@ -6,6 +6,7 @@ import { profileAPI } from '../../../services/api';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import ProfileSidebar from '../../../components/layout/ProfileSidebar';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 function ProfilePage() {
   const { user } = useAuth();
@@ -38,11 +39,11 @@ function ProfilePage() {
       if (showLoading) setLoading(true);
 
       const response = await profileAPI.getMyCandidateProfile();
-      console.log('📋 Profile response:', response?.data);
+
 
       if (response?.data?.code === 1000 && response?.data?.result) {
         const profileData = response.data.result;
-        console.log('✅ Profile loaded:', profileData);
+
         
         try {
           const cvRes = await profileAPI.getMyCVs();
@@ -63,22 +64,22 @@ function ProfilePage() {
           birthday: profileData.birthday || ''
         });
       } else if (response?.data?.code === 1006) {
-        // Unauthenticated
-        console.error('🔒 Code 1006: Unauthenticated');
+        // Chưa xác thực (Unauthenticated)
+        console.error('Code 1006: Unauthenticated');
         toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại');
         localStorage.clear();
         setTimeout(() => navigate('/login'), 1500);
       } else if (response?.data?.code === 1007) {
-        // User not found or bad request
-        console.error('⚠️ Code 1007: User not found or bad request');
+        // Không tìm thấy người dùng hoặc yêu cầu không hợp lệ
+        console.error('Code 1007: User not found or bad request');
         toast.error('Không tìm thấy thông tin người dùng. Vui lòng tạo hồ sơ');
       } else {
         const errorMsg = response?.data?.message || 'Không thể tải hồ sơ';
-        console.error('❌ Error loading profile:', response?.data);
+        console.error('Error loading profile:', response?.data);
         toast.error(errorMsg);
       }
     } catch (err) {
-      console.error('❌ Error fetching profile:', err);
+      console.error('Error fetching profile:', err);
       console.error('Error details:', {
         status: err.response?.status,
         data: err.response?.data,
@@ -88,7 +89,7 @@ function ProfilePage() {
       if (err.response?.status === 400) {
         // User chưa có profile → có thể cần tạo mới
         const errorData = err.response?.data;
-        console.error('🔴 400 Error - Possibly no profile exists:', errorData);
+        console.error('400 Error - Possibly no profile exists:', errorData);
         
         toast.error('Không tìm thấy hồ sơ. Hãy đăng xuất và đăng nhập lại', {
           duration: 3000
@@ -156,7 +157,7 @@ function ProfilePage() {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
-      console.error('❌ Error uploading avatar:', err);
+      console.error('Error uploading avatar:', err);
       toast.error(err.response?.data?.message || 'Không thể tải ảnh lên');
     } finally {
       setUploading(false);
@@ -211,18 +212,18 @@ function ProfilePage() {
 
       if (response?.data?.code === 1000) {
         toast.success(`Đã tải CV lên thành công: ${file.name}`);
-        // Refresh CV list
+        // Cập nhật lại danh sách CV
         const cvRes = await profileAPI.getMyCVs();
         if (cvRes?.data?.code === 1000) setCvList(cvRes.data.result);
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
-      console.error('❌ Error uploading CV:', err);
+      console.error('Error uploading CV:', err);
       toast.error(err.response?.data?.message || 'Không thể tải CV lên');
     } finally {
       setUploading(false);
-      // Reset input value to allow uploading same file again
+      // Đặt lại giá trị để cho phép tải lên cùng một file
       e.target.value = null;
     }
   };
@@ -274,7 +275,7 @@ function ProfilePage() {
         toast.error('Có lỗi xảy ra khi lưu thông tin');
       }
     } catch (err) {
-      console.error('❌ Error updating profile:', err);
+      console.error('Error updating profile:', err);
       const errorMessage = err.response?.data?.message || 'Không thể lưu thay đổi';
       toast.error(errorMessage);
     } finally {
@@ -284,11 +285,10 @@ function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-primary animate-spin">refresh</span>
-          <p className="mt-4 text-on-surface-variant">Đang tải...</p>
-        </div>
+      <div className="flex flex-col min-h-screen bg-surface">
+        <Header />
+        <LoadingSpinner text="Đang tải thông tin cá nhân..." fullPage={true} />
+        <Footer />
       </div>
     );
   }

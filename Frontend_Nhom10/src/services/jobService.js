@@ -165,7 +165,7 @@ const jobService = {
   filterJobs: (jobs, filters = {}) => {
     let filteredJobs = [...jobs];
 
-    // Filter by keyword (title hoặc description)
+    // Lọc theo từ khóa (title hoặc description)
     if (filters.keyword) {
       const keyword = filters.keyword.toLowerCase();
       filteredJobs = filteredJobs.filter(
@@ -184,7 +184,7 @@ const jobService = {
       );
     }
 
-    // Filter by industry
+    // Lọc theo ngành nghề
     if (filters.industry) {
       filteredJobs = filteredJobs.filter((job) =>
         job.industries?.some(

@@ -6,6 +6,8 @@ import Footer from '../../../components/layout/Footer';
 import ProfileSidebar from '../../../components/layout/ProfileSidebar';
 import { Link } from 'react-router-dom';
 
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
+
 const CandidateProfilePage = () => {
   const { user } = useAuth();
   const [appliedJobs, setAppliedJobs] = useState([]);
@@ -20,21 +22,21 @@ const CandidateProfilePage = () => {
     try {
       setLoading(true);
 
-      // Fetch applied jobs từ Backend API
+      // Tải danh sách công việc đã ứng tuyển từ Backend API
       const appliedResponse = await jobAPI.getMyApplications();
-      console.log('✅ Applied jobs response:', appliedResponse);
+
       if (appliedResponse?.data?.result) {
         setAppliedJobs(appliedResponse.data.result);
       }
 
-      // Fetch saved jobs từ localStorage + API
+      // Tải danh sách công việc đã lưu từ localStorage + API
       const savedResponse = await jobAPI.getSavedJobs();
-      console.log('✅ Saved jobs response:', savedResponse);
+
       if (savedResponse?.data?.result) {
         setSavedJobs(savedResponse.data.result);
       }
     } catch (err) {
-      console.error('❌ Error fetching profile data:', err);
+      console.error('Error fetching profile data:', err);
     } finally {
       setLoading(false);
     }
@@ -43,13 +45,13 @@ const CandidateProfilePage = () => {
   const handleUnsaveJob = async (jobId) => {
     try {
       await jobAPI.unsaveJob(jobId);
-      // Refresh saved jobs
+      // Làm mới danh sách công việc đã lưu
       const savedResponse = await jobAPI.getSavedJobs();
       if (savedResponse?.data?.result) {
         setSavedJobs(savedResponse.data.result);
       }
     } catch (err) {
-      console.error('❌ Error unsaving job:', err);
+      console.error('Error unsaving job:', err);
     }
   };
 
@@ -85,10 +87,7 @@ const CandidateProfilePage = () => {
         <div className="flex flex-1 pt-16">
           <ProfileSidebar />
           <main className="flex-1 p-8 bg-surface overflow-y-auto flex items-center justify-center">
-            <div className="text-center">
-              <span className="material-symbols-outlined text-5xl text-primary animate-spin">refresh</span>
-              <p className="mt-4 text-on-surface-variant">Đang tải...</p>
-            </div>
+              <LoadingSpinner text="Đang tải thông tin ứng viên..." />
           </main>
         </div>
         <Footer />

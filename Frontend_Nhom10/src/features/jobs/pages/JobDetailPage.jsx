@@ -5,6 +5,7 @@ import { jobAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 const JobDetailPage = () => {
   const { id } = useParams();
@@ -35,11 +36,11 @@ const JobDetailPage = () => {
     try {
       // ✅ KHÔNG CẦN ensureAuthenticated() - /posts/{id} là PUBLIC endpoint
       const response = await jobAPI.getJobById(id);
-      console.log('📋 Job detail response:', response);
+
 
       if (response?.data?.result) {
         const jobData = response.data.result;
-        console.log('✅ Job data:', jobData);
+
 
         // Ánh xạ cấu trúc dữ liệu backend sang frontend
         const mappedJob = {
@@ -76,12 +77,12 @@ const JobDetailPage = () => {
         
         setJob(mappedJob);
       } else {
-        console.log('⚠️ No data, using mock');
+
         setJob(MOCK_JOB);
       }
     } catch (err) {
-      console.error('❌ Error:', err);
-      console.log('⚠️ Using mock job detail');
+      console.error('Error:', err);
+
       setJob(MOCK_JOB);
     } finally {
       setLoading(false);
@@ -91,7 +92,7 @@ const JobDetailPage = () => {
   const checkIfApplied = async () => {
     try {
       const response = await jobAPI.getMyApplications();
-      // console.log('My applications payload:', response?.data?.result);
+      //
       if (response?.data?.result && Array.isArray(response.data.result)) {
         // Look for application to THIS specific jobPostingId 
         const existingApp = response.data.result.find(
@@ -114,7 +115,7 @@ const JobDetailPage = () => {
         setIsSaved(response.data.result);
       }
     } catch (err) {
-      console.error('❌ Error checking saved status:', err);
+      console.error('Error checking saved status:', err);
     }
   };
 
@@ -132,24 +133,24 @@ const JobDetailPage = () => {
     }
 
     try {
-      console.log('💾 Toggling save job:', id, 'Current state:', isSaved);
+
 
       if (isSaved) {
-        console.log('🔓 Removing from saved jobs');
+
         await jobAPI.unsaveJob(id);
         setIsSaved(false);
         toast.success('Đã bỏ lưu công việc');
       } else {
-        console.log('🔖 Adding to saved jobs');
+
         await jobAPI.saveJob(id);
         setIsSaved(true);
         toast.success('Đã lưu công việc thành công');
       }
     } catch (err) {
-      console.error('❌ Error toggling save:', err);
+      console.error('Error toggling save:', err);
       // Nếu tính năng chưa được thực hiện trong backend, chỉ hiển thị thông báo
       if (err.response?.status === 404 || err.message?.includes('not implemented')) {
-        console.warn('⚠️ Save jobs feature not yet implemented in backend');
+        console.warn('Save jobs feature not yet implemented in backend');
         // Theo tùy chọn vẫn chuyển đổi trạng thái UI cục bộ
         setIsSaved(!isSaved);
       } else {
@@ -204,7 +205,7 @@ const JobDetailPage = () => {
       return;
     }
 
-    // Validate email format
+    // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error('Email không hợp lệ');
@@ -214,7 +215,7 @@ const JobDetailPage = () => {
     setIsApplying(true);
 
     try {
-      console.log('📤 Submitting application for job:', id);
+
 
       // ✅ Correct API call format - PHONE là REQUIRED
       const applicationData = {
@@ -225,7 +226,7 @@ const JobDetailPage = () => {
 
       const response = await jobAPI.applyJob(id, applicationData, formData.cv);
 
-      console.log('✅ Application response:', response);
+
 
       if (response?.data?.code === 1000 || response?.data?.result) {
         toast.success('🎉 Đơn ứng tuyển đã được Gửi Thành Công!', {
@@ -237,7 +238,7 @@ const JobDetailPage = () => {
             },
             style: { border: '1px solid #10b981', color: '#10b981' }
           });
-        // Reset form
+        // Đặt lại form
         setFormData({
           fullName: '',
           email: '',
@@ -245,16 +246,16 @@ const JobDetailPage = () => {
           coverLetter: '',
           cv: null
         });
-        // Clear file input
+        // Xóa input tệp tin
         const fileInput = document.querySelector('input[type="file"]');
         if (fileInput) fileInput.value = '';
       } else {
         const errorMsg = response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-        console.error('❌ Application error:', errorMsg);
+        console.error('Application error:', errorMsg);
         toast.error(errorMsg);
       }
     } catch (err) {
-      console.error('❌ Error applying job:', err);
+      console.error('Error applying job:', err);
       let errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
       
       if (typeof errorMessage === 'object') errorMessage = JSON.stringify(errorMessage);
@@ -281,11 +282,10 @@ const JobDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-primary animate-spin">refresh</span>
-          <p className="mt-4 text-on-surface-variant">Đang tải...</p>
-        </div>
+      <div className="min-h-screen bg-surface flex flex-col">
+        <Header />
+        <LoadingSpinner text="Đang tải thông tin việc làm..." fullPage={true} />
+        <Footer />
       </div>
     );
   }

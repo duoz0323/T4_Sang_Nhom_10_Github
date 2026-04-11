@@ -6,6 +6,7 @@ import { ensureAuthenticated } from '../../../services/guestAuth';
 import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import CompanySidebar from '../../../components/layout/CompanySidebar';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 function CompanyProfilePage() {
   const { user } = useAuth();
@@ -33,13 +34,13 @@ function CompanyProfilePage() {
     try {
       setLoading(true);
       await ensureAuthenticated(); // Ensure token before API call
-      console.log('🔄 Fetching company profile...');
+
       const response = await profileAPI.getMyCompanyProfile();
-      console.log('📋 Company profile response:', response);
+
       
       if (response?.data?.result) {
         const profileData = response.data.result;
-        console.log('✅ Company profile data:', profileData);
+
         setProfile(profileData);
         setFormData({
           companyName: profileData.companyName || '',
@@ -54,11 +55,11 @@ function CompanyProfilePage() {
           taxCode: profileData.taxCode || ''
         });
       } else {
-        console.warn('⚠️ No company profile data');
+        console.warn('No company profile data');
       }
     } catch (err) {
-      console.error('❌ Error fetching company profile:', err);
-      console.error('❌ Error response:', err.response?.data);
+      console.error('Error fetching company profile:', err);
+      console.error('Error response:', err.response?.data);
       toast.error('Không thể tải hồ sơ công ty');
     } finally {
       setLoading(false);
@@ -96,7 +97,7 @@ function CompanyProfilePage() {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
-      console.error('❌ Error uploading logo:', err);
+      console.error('Error uploading logo:', err);
       toast.error('Không thể tải logo lên. Vui lòng thử lại.');
     } finally {
       setUploading(false);
@@ -151,7 +152,7 @@ function CompanyProfilePage() {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
-      console.error('❌ Error updating company profile:', err);
+      console.error('Error updating company profile:', err);
       const errorMessage = err.response?.data?.message || 'Không thể lưu thay đổi';
       toast.error(errorMessage);
     } finally {
@@ -161,11 +162,10 @@ function CompanyProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-primary animate-spin">refresh</span>
-          <p className="mt-4 text-on-surface-variant">Đang tải...</p>
-        </div>
+      <div className="flex flex-col min-h-screen bg-surface">
+        <Header />
+        <LoadingSpinner text="Đang tải thông tin hồ sơ doanh nghiệp..." fullPage={true} />
+        <Footer />
       </div>
     );
   }

@@ -46,3 +46,18 @@ export const MOCK_INDUSTRIES = [
   { industryId: 7, nameIndustry: 'Giáo dục - Đào tạo' },
   { industryId: 8, nameIndustry: 'Xây dựng - Bất động sản' }
 ];
+
+export const MOCK_SKILLS = [
+  { skillId: 1, skillName: 'ReactJS', industryId: 1 },
+  { skillId: 2, skillName: 'Spring Boot', industryId: 1 },
+  { skillId: 3, skillName: 'NodeJS', industryId: 1 },
+  { skillId: 4, skillName: 'Python', industryId: 1 },
+  { skillId: 5, skillName: 'Marketing', industryId: 2 },
+  { skillId: 6, skillName: 'Sales', industryId: 2 },
+  { skillId: 7, skillName: 'Auditing', industryId: 3 },
+  { skillId: 8, skillName: 'Tax', industryId: 3 },
+  { skillId: 9, skillName: 'Figma', industryId: 4 },
+  { skillId: 10, skillName: 'English', industryId: 7 },
+  { skillId: 11, skillName: 'Teaching', industryId: 7 },
+  { skillId: 12, skillName: 'Logistics Management', industryId: 5 }
+];
