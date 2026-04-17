@@ -115,11 +115,11 @@ const JobDetailPage = () => {
         setIsSaved(response.data.result);
       }
     } catch (err) {
-      console.error('Error checking saved status:', err);
+        console.error('Lỗi khi kiểm tra trạng thái lưu công việc:', err);
     }
   };
 
-  const toggleSaveJob = async () => {
+  const handleToggleSave = async () => {
     if (!isAuthenticated) {
       toast.error('Vui lòng đăng nhập để lưu công việc');
       navigate('/login');
@@ -147,7 +147,7 @@ const JobDetailPage = () => {
         toast.success('Đã lưu công việc thành công');
       }
     } catch (err) {
-      console.error('Error toggling save:', err);
+        console.error('Lỗi khi thao tác Lưu/Bỏ lưu công việc:', err);
       // Nếu tính năng chưa được thực hiện trong backend, chỉ hiển thị thông báo
       if (err.response?.status === 404 || err.message?.includes('not implemented')) {
         console.warn('Save jobs feature not yet implemented in backend');
@@ -255,9 +255,9 @@ const JobDetailPage = () => {
         toast.error(errorMsg);
       }
     } catch (err) {
-      console.error('Error applying job:', err);
-      let errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
-      
+        console.error('Lỗi khi nộp đơn ứng tuyển:', err);
+        let errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Có lỗi xảy ra khi gửi đơn ứng tuyển';
+
       if (typeof errorMessage === 'object') errorMessage = JSON.stringify(errorMessage);
       errorMessage = String(errorMessage);
       

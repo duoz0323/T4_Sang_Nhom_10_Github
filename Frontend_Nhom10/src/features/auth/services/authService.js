@@ -1,5 +1,28 @@
 import { authAPI, profileAPI } from '../../../services/api';
 
+// Hàm dịch lỗi tiếng Anh sang tiếng Việt dễ hiểu
+const translateAuthError = (message) => {
+  if (!message) return '';
+  const msg = message.toString();
+  const errorTranslations = {
+    'Unauthenticated': 'Tài khoản hoặc mật khẩu không chính xác.',
+    'User existed': 'Email này đã được đăng ký tài khoản.',
+    'Company existed': 'Email hoặc hệ thống công ty này đã tồn tại.',
+    'Uncategorized error': 'Tài khoản hoặc mật khẩu không chính xác.',
+    'Password must be at least': 'Mật khẩu phải có ít nhất 6 ký tự.',
+    'Cannot be left blank': 'Vui lòng điền đủ thông tin.',
+    'NOT_BLANK': 'Trường thông tin không được để trống.',
+    'Number must be none nagative': 'Dữ liệu số không hợp lệ.'
+  };
+
+  for (const [eng, vie] of Object.entries(errorTranslations)) {
+    if (msg.includes(eng) || msg === eng) {
+      return vie;
+    }
+  }
+  return msg;
+};
+
 // Decode JWT token để lấy thông tin user và role
 const decodeToken = (token) => {
   try {
@@ -200,7 +223,7 @@ const authService = {
       console.log('Login API returned non-1000 code:', response.data.code);
       return {
         success: false,
-        message: response.data.message || 'Đăng nhập thất bại',
+        message: translateAuthError(response.data.message || 'Đăng nhập thất bại'),
       };
     } catch (error) {
       console.error('Login error caught:', error);
@@ -216,7 +239,7 @@ const authService = {
                           'Email hoặc mật khẩu không đúng';
       return {
         success: false,
-        message: errorMessage,
+        message: translateAuthError(errorMessage),
       };
     }
   },
@@ -235,7 +258,7 @@ const authService = {
       
       return {
         success: false,
-        message: response.data.message || 'Đăng ký thất bại',
+        message: translateAuthError(response.data.message || 'Đăng ký thất bại'),
       };
     } catch (error) {
       console.error('Register error:', error.response?.data);
@@ -245,7 +268,7 @@ const authService = {
                           'Email đã tồn tại hoặc thông tin không hợp lệ';
       return {
         success: false,
-        message: errorMessage,
+        message: translateAuthError(errorMessage),
       };
     }
   },
@@ -332,12 +355,12 @@ const authService = {
       
       return {
         success: false,
-        message: response.data.message || 'Đăng nhập thất bại',
+        message: translateAuthError(response.data.message || 'Đăng nhập thất bại'),
       };
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Email hoặc mật khẩu không đúng',
+        message: translateAuthError(error.response?.data?.message || 'Email hoặc mật khẩu không đúng'),
       };
     }
   },
@@ -356,12 +379,12 @@ const authService = {
       
       return {
         success: false,
-        message: response.data.message || 'Đăng ký thất bại',
+        message: translateAuthError(response.data.message || 'Đăng ký thất bại'),
       };
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Email đã tồn tại hoặc thông tin không hợp lệ',
+        message: translateAuthError(error.response?.data?.message || 'Email đã tồn tại hoặc thông tin không hợp lệ'),
       };
     }
   },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { jobAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -9,6 +9,9 @@ import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 const CompanyManageCandidatesPage = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const initialJobId = searchParams.get('jobId') || 'ALL';
+    
     const [loading, setLoading] = useState(true);
     const [candidates, setCandidates] = useState([]);
     const [jobs, setJobs] = useState([]); // Chứa danh sách các bài đăng để lọc
@@ -17,7 +20,7 @@ const CompanyManageCandidatesPage = () => {
     // States cho tìm kiếm và lọc
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, PENDING, ACCEPTED, REJECTED
-    const [jobFilter, setJobFilter] = useState('ALL');
+    const [jobFilter, setJobFilter] = useState(initialJobId);
 
     useEffect(() => {
         fetchData();

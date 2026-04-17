@@ -6,6 +6,7 @@ function Header() {
   const location = useLocation();
   const { user, logout, isAuthenticated, isApplicant, isCompany, isAdmin } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const dropdownRef = useRef(null);
 
   // Đóng dropdown khi bấm bên ngoài
@@ -49,51 +50,63 @@ function Header() {
           />
         </Link>
 
-        {/* Menu điều hướng - Chỉ hiển thị cho ứng viên hoặc chưa đăng nhập - ở giữa */}
+        {/* Mobile Menu Button - Left aligned on mobile */}
         {(!isAuthenticated || isApplicant) && (
-          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
-          <Link 
-            to="/" 
-            className={`font-medium transition-colors pb-1 ${
-              isActive('/') 
-                ? 'text-on-surface border-b-2 border-secondary' 
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
+          <button 
+            className="md:hidden p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors ml-4"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
           >
-            Trang chủ
-          </Link>
-          <Link 
-            to="/jobs" 
-            className={`font-medium transition-colors pb-1 ${
-              isActive('/jobs') 
-                ? 'text-on-surface border-b-2 border-secondary' 
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-          >
-            Tìm việc làm
-          </Link>
-          <Link 
-            to="/companies" 
-            className={`font-medium transition-colors pb-1 ${
-              isActive('/companies') 
-                ? 'text-on-surface border-b-2 border-secondary' 
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-          >
-            Công ty
-          </Link>
-          <Link 
-            to="/blog" 
-            className={`font-medium transition-colors pb-1 ${
-              isActive('/blog') 
-                ? 'text-on-surface border-b-2 border-secondary' 
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-          >
-            Blog
-          </Link>
-        </nav>
+            <span className="material-symbols-outlined text-2xl">
+              {showMobileMenu ? 'close' : 'menu'}
+            </span>
+          </button>
         )}
+
+        {/* Menu điều hướng - Hiển thị menu dọc cho mobile, menu ngang cho desktop */}
+        {(!isAuthenticated || isApplicant) && (
+            <nav className={`${showMobileMenu ? 'flex flex-col' : 'hidden'} absolute top-[72px] right-4 left-4 z-50 bg-white rounded-2xl shadow-2xl border border-outline-variant py-2 px-2 md:static md:bg-transparent md:border-none md:shadow-none md:flex-row md:flex md:flex-1 md:justify-center md:py-0 md:px-0 md:gap-8`}>
+            <Link
+              to="/"
+              className={`block w-full py-3 px-4 rounded-xl text-left md:inline-block md:w-auto md:p-0 md:rounded-none md:text-center font-medium transition-colors pb-1 ${
+                isActive('/')
+                  ? 'bg-primary/10 text-primary md:bg-transparent md:text-on-surface md:border-b-2 md:border-secondary'
+                  : 'text-on-surface-variant hover:bg-surface-container md:hover:bg-transparent hover:text-primary'
+              }`}
+            >
+              Trang chủ
+            </Link>
+            <Link
+              to="/jobs"
+              className={`block w-full py-3 px-4 rounded-xl text-left md:inline-block md:w-auto md:p-0 md:rounded-none md:text-center font-medium transition-colors pb-1 ${
+                isActive('/jobs')
+                  ? 'bg-primary/10 text-primary md:bg-transparent md:text-on-surface md:border-b-2 md:border-secondary'
+                  : 'text-on-surface-variant hover:bg-surface-container md:hover:bg-transparent hover:text-primary'
+              }`}
+            >
+              Tìm việc làm
+            </Link>
+            <Link
+              to="/companies"
+              className={`block w-full py-3 px-4 rounded-xl text-left md:inline-block md:w-auto md:p-0 md:rounded-none md:text-center font-medium transition-colors pb-1 ${
+                isActive('/companies')
+                  ? 'bg-primary/10 text-primary md:bg-transparent md:text-on-surface md:border-b-2 md:border-secondary'
+                  : 'text-on-surface-variant hover:bg-surface-container md:hover:bg-transparent hover:text-primary'
+              }`}
+            >
+              Công ty
+            </Link>
+            <Link
+              to="/blog"
+              className={`block w-full py-3 px-4 rounded-xl text-left md:inline-block md:w-auto md:p-0 md:rounded-none md:text-center font-medium transition-colors pb-1 ${
+                isActive('/blog')
+                  ? 'bg-primary/10 text-primary md:bg-transparent md:text-on-surface md:border-b-2 md:border-secondary'
+                  : 'text-on-surface-variant hover:bg-surface-container md:hover:bg-transparent hover:text-primary'
+              }`}
+            >
+              Blog
+            </Link>
+          </nav>
+          )}
 
         {/* Admin Navigation */}
         {isAdmin && (

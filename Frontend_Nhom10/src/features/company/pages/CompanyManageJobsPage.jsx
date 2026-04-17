@@ -268,16 +268,18 @@ function CompanyManageJobsPage() {
                         <span className="material-symbols-outlined">edit</span> 
                       </Link>
                       <button
-                        onClick={() => handleToggleJobVisibility(job)}        
-                        className="p-3 text-slate-400 hover:text-primary hover:bg-primary-container transition-all rounded-lg active:scale-90"
-                        title={job.status === 'CLOSED' ? "Hiện tin" : "Ẩn tin"}
+                        onClick={() => {
+                          alert('Tính năng đang phát triển');
+                        }}
+                        className="p-3 text-slate-400 hover:text-secondary hover:drop-shadow-md hover:bg-secondary-fixed transition-all rounded-lg active:scale-90"
+                        title="Ẩn tin"
                       >
                         <span className="material-symbols-outlined">
-                          {job.status === 'CLOSED' ? 'visibility_off' : 'visibility'}
+                          visibility
                         </span>
                       </button>
                       {isAdminApproved ? (
-                        <Link to={`/company/manage-candidates?jobId=${job.jobPostingId || job.id}`} className={`ml-auto xl:ml-2 px-6 py-2 ${statusBtnClass} rounded-lg font-bold text-sm shadow-sm transition-all flex items-center justify-center`}>
+                        <Link to={`/company/candidates?jobId=${job.jobPostingId || job.id}`} className={`ml-auto xl:ml-2 px-6 py-2 ${statusBtnClass} rounded-lg font-bold text-sm shadow-sm transition-all flex items-center justify-center`}>
                           {statusBtnText}
                         </Link>
                       ) : (

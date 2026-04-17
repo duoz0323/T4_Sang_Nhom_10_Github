@@ -234,15 +234,31 @@ export const profileAPI = {
   },
 
   // Tải ảnh đại diện (công ty)
-  uploadCompanyAvatar: (profileId, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.put(`/company_profile/${profileId}/avatar`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
+    uploadCompanyAvatar: async (profileId, file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadResponse = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      const newAvatarUrl = uploadResponse.data;
+
+      const currentProfileResponse = await api.get('/company_profile/my-profile');
+      const cp = currentProfileResponse.data.result;
+
+      const updateRequest = {
+        phoneNumber: cp.phoneNumber || '',
+        companyName: cp.companyName || '',
+        address: cp.address || '',
+        tax: cp.tax || '',
+        desiredSalary: cp.desiredSalary || 0,
+        status: cp.status !== undefined ? cp.status : true,
+        avatar: newAvatarUrl
+      };
+
+      return api.put('/company_profile', updateRequest);
+    },
 
   // Tải CV (ứng viên)
   uploadCV: (data, file) => {

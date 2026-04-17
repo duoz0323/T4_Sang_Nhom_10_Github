@@ -9,51 +9,49 @@ import CompanySidebar from '../../../components/layout/CompanySidebar';
 import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 function CompanyProfilePage() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    companyName: '', 
-    industry: '', 
-    email: '', 
+    companyName: '',
+    email: '',
     phone: '',
-    website: '',
     address: '',
-    description: '',
-    foundedYear: '',
-    companySize: '',
     taxCode: ''
   });
 
   useEffect(() => {
     fetchCompanyProfile();
-  }, [user]);
+  }, []);
 
-  const fetchCompanyProfile = async () => {
+  const fetchCompanyProfile = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       await ensureAuthenticated(); // Ensure token before API call
 
       const response = await profileAPI.getMyCompanyProfile();
 
-      
       if (response?.data?.result) {
         const profileData = response.data.result;
 
         setProfile(profileData);
         setFormData({
           companyName: profileData.companyName || '',
-          industry: profileData.industry || '',
           email: profileData.email || '',
-          phone: profileData.phone || '',
-          website: profileData.website || '',
+          phone: profileData.phoneNumber || '',
           address: profileData.address || '',
-          description: profileData.description || '',
-          foundedYear: profileData.foundedYear || '',
-          companySize: profileData.companySize || '',
-          taxCode: profileData.taxCode || ''
+          taxCode: profileData.tax || ''
         });
+
+        // Update global AuthContext user if avatar or companyName changed
+        if (user && (profileData.avatar !== user.avatar || profileData.companyName !== user.name)) {
+          login({
+            ...user,
+            avatar: profileData.avatar || user.avatar,
+            name: profileData.companyName || user.name
+          });
+        }
       } else {
         console.warn('No company profile data');
       }
@@ -62,7 +60,7 @@ function CompanyProfilePage() {
       console.error('Error response:', err.response?.data);
       toast.error('Không thể tải hồ sơ công ty');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -92,7 +90,7 @@ function CompanyProfilePage() {
       
       if (response?.data?.code === 1000) {
         toast.success('Đã cập nhật logo công ty thành công');
-        await fetchCompanyProfile(); // Refresh profile
+        await fetchCompanyProfile(false); // Refresh profile without spinner
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
@@ -133,21 +131,17 @@ function CompanyProfilePage() {
       
       const updateData = {
         companyName: formData.companyName,
+        phoneNumber: formData.phone,
         address: formData.address,
-        description: formData.description,
-        website: formData.website,
-        phone: formData.phone,
-        industry: formData.industry,
-        foundedYear: formData.foundedYear,
-        companySize: formData.companySize,
-        taxCode: formData.taxCode
+        tax: formData.taxCode,
+        avatar: profile?.avatar || ''
       };
 
       const response = await profileAPI.updateCompanyProfile(updateData);
       
       if (response?.data?.code === 1000) {
         toast.success('Đã lưu thay đổi thành công!');
-        await fetchCompanyProfile(); // Refresh profile
+        await fetchCompanyProfile(false); // Refresh profile without spinner
       } else {
         toast.error(response?.data?.message || 'Có lỗi xảy ra');
       }
@@ -196,7 +190,7 @@ function CompanyProfilePage() {
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="relative group">
                   <div className="h-32 w-32 rounded-xl ring-4 ring-surface-container overflow-hidden bg-white p-4">
-                    <img alt="Company Logo" className="w-full h-full object-contain" src={profile?.logo || user?.avatar || 'https://via.placeholder.com/150'}/>
+                    <img alt="Company Logo" className="w-full h-full object-contain" src={profile?.avatar || user?.avatar || 'https://via.placeholder.com/150'}/>
                   </div>
                   <label htmlFor="logo-upload" className="absolute bottom-0 right-0 bg-secondary text-white p-2 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform cursor-pointer">
                     <span className="material-symbols-outlined text-sm">photo_camera</span>
@@ -221,23 +215,15 @@ function CompanyProfilePage() {
                         onChange={handleInputChange}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Lĩnh vực</label>
-                      <input 
-                        className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" 
-                        type="text" 
-                        name="industry" 
-                        value={formData.industry} 
-                        onChange={handleInputChange}
-                      />
-                    </div>
+                    
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Email</label>
-                      <input 
-                        className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" 
-                        type="email" 
-                        name="email" 
-                        value={formData.email} 
+                      <input
+                        className="w-full bg-surface-container border border-outline-variant rounded-lg p-3 text-sm text-on-surface-variant cursor-not-allowed"
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        disabled
                         onChange={handleInputChange}
                       />
                     </div>
@@ -251,16 +237,7 @@ function CompanyProfilePage() {
                         onChange={handleInputChange}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Website</label>
-                      <input 
-                        className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" 
-                        type="url" 
-                        name="website" 
-                        value={formData.website} 
-                        onChange={handleInputChange}
-                      />
-                    </div>
+                    
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mã số thuế</label>
                       <input 
@@ -271,34 +248,7 @@ function CompanyProfilePage() {
                         onChange={handleInputChange}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Năm thành lập</label>
-                      <input 
-                        className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" 
-                        type="number" 
-                        name="foundedYear" 
-                        value={formData.foundedYear} 
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Quy mô</label>
-                      <select 
-                        className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" 
-                        name="companySize" 
-                        value={formData.companySize} 
-                        onChange={handleInputChange}
-                      >
-                        <option value="">Chọn quy mô</option>
-                        <option value="1-50">1-50 nhân viên</option>
-                        <option value="51-200">51-200 nhân viên</option>
-                        <option value="201-500">201-500 nhân viên</option>
-                        <option value="501-1000">501-1000 nhân viên</option>
-                        <option value="1001-5000">1001-5000 nhân viên</option>
-                        <option value="5000-10000">5000-10000 nhân viên</option>
-                        <option value="10000+">Hơn 10000 nhân viên</option>
-                      </select>
-                    </div>
+
                   </div>
                   <div className="mt-6 space-y-1">
                     <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Địa chỉ</label>
@@ -310,16 +260,7 @@ function CompanyProfilePage() {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="mt-6 space-y-1">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Giới thiệu công ty</label>
-                    <textarea 
-                      className="w-full bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all p-3 text-sm" 
-                      name="description" 
-                      rows="4" 
-                      value={formData.description} 
-                      onChange={handleInputChange}
-                    />
-                  </div>
+                  
                 </div>
               </div>
             </section>
