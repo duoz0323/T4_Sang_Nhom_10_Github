@@ -95,11 +95,13 @@ function CompanyCreateJobPage() {
 
             setFormData({
               title: job.title || '',
-              industryId: job.industry?.industryId || '',
+                industryId: job.industry?.industryId || job.industry?.id || job.industryId || '',
                 locationId: job.locations?.[0]?.id || job.locations?.[0]?.locationId || '',
-              skillIds: job.skills ? job.skills.map(s => s.skillId) : [],
-              salaryRequire: job.salaryRequire || '',
-              deadline: job.deadline ? job.deadline : '',
+                skillIds: job.skills ? job.skills.map(s => s.skillId || s.id) : [],
+                salaryRequire: job.salaryRequire || '',
+                deadline: Array.isArray(job.deadline) 
+                  ? `${job.deadline[0]}-${String(job.deadline[1]).padStart(2, '0')}-${String(job.deadline[2]).padStart(2, '0')}` 
+                  : (job.deadline ? job.deadline.split('T')[0] : ''),
               description: desc,
               requirements: reqs,
               benefits: benfs
@@ -135,7 +137,7 @@ function CompanyCreateJobPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.industryId || !formData.locationId || !formData.salaryRequire || !formData.deadline || !formData.skillIds || formData.skillIds.length === 0) {
-      toast.error('Vui lòng điền đầy đủ các thông tin bắt buộc (Tiêu đề, Nghành nghề, Kỹ năng, Địa điểm, Mức lương, Hạn chót)');
+      toast.error('Vui lòng điền đầy đủ các thông tin bắt buộc (Tiêu đề, Ngành nghề, Kỹ năng, Địa điểm, Mức lương, Hạn chót)');
       return;
     }
 
@@ -166,8 +168,32 @@ function CompanyCreateJobPage() {
       
       setTimeout(() => navigate('/company/manage-jobs'), 500);
     } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || 'Lỗi khi lưu tin tuyển dụng');
+      console.error("Lỗi khi đăng hoặc cập nhật công việc:", error);
+      let errorMessage = error.response?.data?.message || error.message || 'Lỗi khi lưu tin tuyển dụng';
+      
+      let translatedError = errorMessage;
+      const errorTranslations = {
+        'Uncategorized error': 'Lỗi không xác định từ hệ thống hoặc dữ liệu không hợp lệ.',
+        'Cannot be left blank': 'Trường thông tin không được để trống.',
+        'NOT_BLANK': 'Trường thông tin không được để trống.',
+        'NUMBER_MUST_BE_POSITIVE': 'Mức lương phải lớn hơn 0.',
+        'Number must be none nagative': 'Mức lương (hoặc giá trị số) phải lớn hơn 0.',
+        'Name Industry is too long': 'Tên ngành nghề quá dài.',
+        'Skill not belong to industry': 'Kỹ năng không thuộc ngành nghề đã chọn.',
+        'Job not available': 'Tin tuyển dụng hiện không khả dụng.',
+        'Job is expired': 'Tin tuyển dụng đã hết hạn.',
+        'Post is not existed': 'Bài đăng này không tồn tại.',
+        'Can not adjust this post': 'Bạn không có quyền chỉnh sửa bài đăng này.'
+      };
+
+      for (const [eng, vie] of Object.entries(errorTranslations)) {
+        if (errorMessage.includes(eng) || eng === errorMessage) {
+          translatedError = vie;
+          break;
+        }
+      }
+
+      toast.error(translatedError);
     } finally {
       setLoading(false);
     }

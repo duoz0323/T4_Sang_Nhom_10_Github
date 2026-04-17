@@ -132,6 +132,22 @@ const HomePage = () => {
     navigate(`/jobs${params.toString() ? '?' + params.toString() : ''}`);
   };
 
+  const handleCategoryClick = (keyword) => {
+    const params = new URLSearchParams();
+    // Tìm ngành có tên chứa keyword
+    const matchingIndustry = industries.find(ind => 
+      ind.nameIndustry.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    if (matchingIndustry) {
+      params.append('industryId', matchingIndustry.industryId);
+    } else {
+      params.append('keyword', keyword);
+    }
+    
+    navigate(`/jobs?${params.toString()}`);
+  };
+
   useEffect(() => {
     const fetchJobs = async () => {
       // Ưu tiên kiểm tra cache (bộ nhớ tạm) để hiển thị ngay
@@ -340,7 +356,10 @@ const HomePage = () => {
               <span className="text-secondary font-bold tracking-widest uppercase text-xs">Danh mục hàng đầu</span>
               <h2 className="text-2xl font-black font-headline mt-2 text-primary tracking-tight">Khám phá các lĩnh vực dẫn đầu thị trường</h2>
             </div>
-            <button className="group flex items-center gap-2 text-on-surface font-bold text-sm hover:text-secondary transition-colors">
+            <button 
+              onClick={() => navigate('/jobs')}
+              className="group flex items-center gap-2 text-on-surface font-bold text-sm hover:text-secondary transition-colors"
+            >
               Xem tất cả ngành nghề
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
@@ -348,7 +367,10 @@ const HomePage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {/* Ngành IT */}
-            <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
+            <div 
+              onClick={() => handleCategoryClick('Công nghệ')}
+              className="md:col-span-2 lg:col-span-2 group cursor-pointer"
+            >
               <div className="relative h-56 rounded-2xl overflow-hidden bg-slate-900">
                 <img className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="High tech digital circuit board background with glowing teal and blue binary data patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-1_uc3ziR2-N10mmQiR4p5f4ESrarnRbKPh0UW6n8EqhG8g1NRcuZnJniDwhAinC6ZLP3w6ggiHDXlSq7CmIeCkLf_pf6svN4rYGl2mhF_FDXSTUlwsAIJoKej4AvB_ThdEj2iq-m3l5LG0Da1Y9nY5Jp3jZy1RIXzhJt4Y4z3i-6rvA9cFQVF3W1qUT_316K3ajeDIBjsWAxWwgTbYQHxno33-A6uU99UeSV_uSszs1LagLTX2yTntvS4xPQdBggXemmivL-frSr" />
                 <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-transparent to-transparent"></div>
@@ -360,7 +382,10 @@ const HomePage = () => {
             </div>
 
             {/* Marketing */}
-            <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
+            <div 
+              onClick={() => handleCategoryClick('Marketing')}
+              className="md:col-span-2 lg:col-span-2 group cursor-pointer"
+            >
               <div className="relative h-56 rounded-2xl overflow-hidden bg-secondary-container">
                 <div className="absolute top-5 right-5">
                   <span className="material-symbols-outlined text-3xl text-on-secondary-container/30">campaign</span>
@@ -373,7 +398,10 @@ const HomePage = () => {
             </div>
 
             {/* Finance */}
-            <div className="md:col-span-2 lg:col-span-2 group cursor-pointer">
+            <div 
+              onClick={() => handleCategoryClick('Tài chính')}
+              className="md:col-span-2 lg:col-span-2 group cursor-pointer"
+            >
               <div className="relative h-56 rounded-2xl overflow-hidden bg-white shadow-sm border border-outline-variant/20 flex flex-col p-6 group-hover:shadow-xl transition-all">
                 <div className="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed mb-auto text-sm">
                   <span className="material-symbols-outlined text-base">payments</span>
@@ -386,7 +414,10 @@ const HomePage = () => {
             </div>
 
             {/* Healthcare */}
-            <div className="md:col-span-3 lg:col-span-3 group cursor-pointer">
+            <div 
+              onClick={() => handleCategoryClick('Y tế')}
+              className="md:col-span-3 lg:col-span-3 group cursor-pointer"
+            >
               <div className="relative h-56 rounded-2xl overflow-hidden bg-surface-container-high border border-outline-variant/10 p-6 flex items-center gap-6 group-hover:bg-white group-hover:shadow-lg transition-all">
                 <div className="flex-1">
                   <h3 className="text-xl font-bold font-headline text-primary">Y tế &amp; Dược phẩm</h3>
@@ -400,7 +431,10 @@ const HomePage = () => {
             </div>
 
             {/* Logistics */}
-            <div className="md:col-span-3 lg:col-span-3 group cursor-pointer">
+            <div 
+              onClick={() => handleCategoryClick('Vận tải')}
+              className="md:col-span-3 lg:col-span-3 group cursor-pointer"
+            >
               <div className="relative h-56 rounded-2xl overflow-hidden bg-primary p-6 flex flex-col justify-between group-hover:bg-primary-container transition-all">
                 <img className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" alt="Modern logistics warehouse with stacked containers and robotic arms in a sleek architectural environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2DY_0lEaiOOTmUjgDSaDuAvqGhVIho_hQF5PmKz4KFvZVCqmt8R-6cfv4eXX121WR9y2bQ2jviWgCfvXmrC2TW-vs7-dxtPicSCn8EOsgVm6fQQNkkhfOrzGaJdtN18uumVAd6DsNPAWPaPzkaEoFeRd8TvuDszTr5kUp6uGW-Pz67fBmRSBBMtOX4I2XAlFsWCK12xBNpONTq8nJRBooWtWU4OWfMMIOk9EZROAggZWT4-MVMEpRj30H3C_6wjTa4fwp7k4osakz" />
                 <div className="flex justify-between items-start">
