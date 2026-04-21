@@ -10,6 +10,8 @@ function AdminSidebar() {
     { path: '/users', icon: 'group', label: 'Quản lý người dùng' },
     { path: '/admin/companies', icon: 'business', label: 'Quản lý doanh nghiệp' },
     { path: '/admin/pending-posts', icon: 'pending_actions', label: 'Kiểm duyệt tin' },
+    { path: '/admin/categories', icon: 'category',  label: 'Quản lý danh mục' },
+    { path: '/admin/statistics', icon: 'bar_chart', label: 'Thống kê hệ thống' },
     { path: '/admin/posts', icon: 'article', label: 'Bài viết và blog' },
     { path: '/admin/activity-log', icon: 'history', label: 'Nhật ký hoạt động' }
   ];

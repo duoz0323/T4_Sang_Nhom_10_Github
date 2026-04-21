@@ -27,7 +27,7 @@ const JobListPage = () => {
   });
   const jobsPerPage = 10;
 
-  // ✅ PARALLEL FETCHING - Load locations, industries, and jobs simultaneously
+  //  PARALLEL FETCHING - Load locations, industries, and jobs simultaneously
   useEffect(() => {
     const initializeData = async () => {
       // Kiểm tra cache trước
@@ -126,7 +126,7 @@ const JobListPage = () => {
       const response = await jobAPI.getAllActiveJobs(params);
 
       if (response?.data?.code === 1000 && response?.data?.result) {
-        // ✅ SIMPLIFIED PARSING - Backend always returns Array for /posts/public
+        //  SIMPLIFIED PARSING - Backend always returns Array for /posts/public
         const jobsFromAPI = response.data.result;
 
         if (Array.isArray(jobsFromAPI)) {
@@ -160,7 +160,7 @@ const JobListPage = () => {
               };
             });
 
-          // ✅ FRONTEND PAGINATION - Backend returns all jobs, we paginate client-side
+          //  FRONTEND PAGINATION - Backend returns all jobs, we paginate client-side
           const startIndex = currentPage * jobsPerPage;
           const endIndex = startIndex + jobsPerPage;
           const paginatedJobs = mappedJobs.slice(startIndex, endIndex);
@@ -195,6 +195,7 @@ const JobListPage = () => {
     }
 
     setLoading(false);
+   
   };
 
   const handleFilterChange = (key, value) => {
