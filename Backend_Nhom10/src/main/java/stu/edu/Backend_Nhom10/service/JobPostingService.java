@@ -177,4 +177,12 @@ public class JobPostingService {
 
         jobPostingRepository.saveAll(jobs);
     }
+    public List<JobPostingResponse> filterByIndustry(Long industryId) {
+        return jobPostingRepository
+                .searchPublicPosts(industryId, null, null, null, LocalDate.now())
+                .stream()
+                .map(jobPostingMapper::toJobPostingResponse)
+                .toList();
+    }
+
 }

@@ -1,13 +1,13 @@
 package stu.edu.Backend_Nhom10.repository;
 
-import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import stu.edu.Backend_Nhom10.entity.CompanyProfile;
 import stu.edu.Backend_Nhom10.entity.JobPosting;
 import stu.edu.Backend_Nhom10.enums.Status;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -33,15 +33,24 @@ public interface JobPostingRepository extends JpaRepository<JobPosting,String> {
     // filter nhiều status (admin dashboard)
     List<JobPosting> findByStatusIn(List<Status> statuses);
 
-    // ================= CHECK =================
-    boolean existsByJobPostingIdAndCompanyProfile(String id, CompanyProfile company);
-    // ================= SEARCH (OPTIONAL NÂNG CAO) =================
+    // ================= SEARCH =================
     @Query("""
-        SELECT j FROM JobPosting j
-        WHERE LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        AND j.status = 'APPROVED'
-    """)
-    List<JobPosting> searchByTitle(@Param("keyword") String keyword);
-
+    SELECT DISTINCT j
+    FROM JobPosting j
+    LEFT JOIN j.locations l
+    WHERE j.status = stu.edu.Backend_Nhom10.enums.Status.ACTIVE
+      AND (j.deadline IS NULL OR j.deadline >= :today)
+      AND (:industryId IS NULL OR j.industry.industryId = :industryId)
+      AND (:locationId IS NULL OR l.id = :locationId)
+      AND (:minSalary IS NULL OR j.salaryRequire >= :minSalary)
+      AND (:maxSalary IS NULL OR j.salaryRequire <= :maxSalary)
+""")
+    List<JobPosting> searchPublicPosts(
+            @Param("industryId") Long industryId,
+            @Param("locationId") Long locationId,
+            @Param("minSalary") BigDecimal minSalary,
+            @Param("maxSalary") BigDecimal maxSalary,
+            @Param("today") LocalDate today
+    );
 
 }
