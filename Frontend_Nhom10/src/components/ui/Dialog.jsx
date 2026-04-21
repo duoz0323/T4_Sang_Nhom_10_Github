@@ -7,7 +7,7 @@ export default function Dialog({ isOpen, onClose, children, title }) {
 
   return (
     <div
-      className="fixed inset-0 bg-opacity-90 z-50 flex items-center justify-center"
+      className="fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center"
       onClick={onClose}
     >
       <div

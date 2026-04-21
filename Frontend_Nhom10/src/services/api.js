@@ -26,7 +26,7 @@ api.interceptors.request.use(
     ];
 
 const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint)) ||
-                             (url.includes('/posts/') && !url.includes('/posts/my-jobs') && !url.includes('/posts/create') && !url.includes('/posts/update') && !url.includes('/posts/delete') && !url.includes('/close') && !url.includes('/reopen'));
+                             (url.includes('/posts/') && !url.includes('/posts/admin') && !url.includes('/posts/my-jobs') && !url.includes('/posts/create') && !url.includes('/posts/update') && !url.includes('/posts/delete') && !url.includes('/close') && !url.includes('/reopen'));
 
     if (!isPublicEndpoint) {
       const token = localStorage.getItem('token') || 
@@ -509,6 +509,37 @@ export const companyAPI = {
         'Content-Type': 'multipart/form-data',
       },
     });
+  },
+};
+
+// API Hồ sơ ứng viên
+export const candidateAPI = {
+  getAllCandidates: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.keyword) queryParams.append('keyword', params.keyword);
+    if (params.page !== undefined) queryParams.append('page', params.page);
+    if (params.size !== undefined) queryParams.append('size', params.size);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+
+    const queryString = queryParams.toString();
+    return api.get(`/candidate_profile/profiles${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getCandidateById: (candidateId) => {
+    return api.get(`/candidate_profile/${candidateId}`);
+  },
+};
+
+// API Admin
+export const adminAPI = {
+  getPendingPosts: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page !== undefined) queryParams.append('page', params.page);
+    if (params.size !== undefined) queryParams.append('size', params.size);
+    
+    const queryString = queryParams.toString();
+    return api.get(`/posts/admin/pending${queryString ? `?${queryString}` : ''}`);
   },
 };
 

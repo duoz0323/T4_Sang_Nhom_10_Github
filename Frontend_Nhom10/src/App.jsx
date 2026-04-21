@@ -21,6 +21,8 @@ import CompanyCreateJobPage from "./features/company/pages/CompanyCreateJobPage.
 import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePage.jsx";
 import CompanyManageCandidatesPage from './features/company/pages/CompanyManageCandidatesPage';
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage.jsx";
+import AdminUserPage from "./features/admin/pages/AdminUserPage.jsx";
+import AdminPendingPostPage from "./features/admin/pages/AdminPendingPostPage.jsx";
 import BlogPage from "./features/blog/pages/BlogPage.jsx";
 import './App.css'
 
@@ -154,7 +156,23 @@ function App() {
             path="/users"
             element={
               <ProtectedRoute requiredRole="ADMIN">
-                <AdminDashboardPage />
+                <AdminUserPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminUserPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pending-posts"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminPendingPostPage />
               </ProtectedRoute>
             }
           />
