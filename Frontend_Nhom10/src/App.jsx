@@ -21,6 +21,8 @@ import CompanyCreateJobPage from "./features/company/pages/CompanyCreateJobPage.
 import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePage.jsx";
 import CompanyManageCandidatesPage from './features/company/pages/CompanyManageCandidatesPage';
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage.jsx";
+import AdminCategoriesPage from "./features/admin/pages/AdminCategoriesPage.jsx";
+import AdminStatisticsPage from "./features/admin/pages/AdminStatisticsPage.jsx";
 import BlogPage from "./features/blog/pages/BlogPage.jsx";
 import './App.css'
 
@@ -48,6 +50,8 @@ function App() {
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin/categories" element={<ProtectedRoute requiredRole="ADMIN"><AdminCategoriesPage /></ProtectedRoute>} />
+          <Route path="/admin/statistics" element={<ProtectedRoute requiredRole="ADMIN"><AdminStatisticsPage /></ProtectedRoute>} />
           
           {/* Candidate Routes */}
           <Route
