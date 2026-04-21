@@ -22,7 +22,7 @@ export const USER_ROLES = {
 };
 
 // Thời gian hết hạn token (giây)
-export const TOKEN_EXPIRATION = 300; // 5 minutes
+export const TOKEN_EXPIRATION = 300; // 5 phút
 
 
 export const MOCK_LOCATIONS = [

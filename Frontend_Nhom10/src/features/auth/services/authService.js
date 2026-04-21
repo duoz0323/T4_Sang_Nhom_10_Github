@@ -23,16 +23,16 @@ const translateAuthError = (message) => {
   return msg;
 };
 
-// Decode JWT token để lấy thông tin user và role
+// Giải mã token JWT để lấy thông tin người dùng và quyền
 const decodeToken = (token) => {
   try {
     if (!token) return null;
     
-    // JWT format: header.payload.signature
+    // Định dạng JWT: header.payload.signature
     const base64Url = token.split('.')[1];
     if (!base64Url) return null;
     
-    // Decode base64url
+    // Giải mã base64url
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -42,10 +42,10 @@ const decodeToken = (token) => {
     );
     
     const decoded = JSON.parse(jsonPayload);
-    console.log('Decoded token:', decoded);
+    console.log('Token đã giải mã:', decoded);
     
     // Lấy role từ token
-    // Ưu tiên: realm_access.roles > roles (top-level)
+    // Ưu tiên: realm_access.roles > roles (cấp cao nhất)
     let roles = [];
     if (decoded.realm_access?.roles) {
       roles = decoded.realm_access.roles;
@@ -60,14 +60,14 @@ const decodeToken = (token) => {
       exp: decoded.exp
     };
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.error('Lỗi khi giải mã token:', error);
     return null;
   }
 };
 
 // Lưu dữ liệu xác thực vào localStorage
 const saveAuthData = (data) => {
-  console.log('saveAuthData called with:', data);
+  console.log('Đã gọi saveAuthData với:', data);
   
   // Xử lý cả snake_case và camelCase từ backend
   const accessToken = data.accessToken || data.access_token;
@@ -75,9 +75,9 @@ const saveAuthData = (data) => {
   const tokenType = data.tokenType || data.token_type || 'Bearer';
   const expiresIn = data.expiresIn || data.expires_in;
 
-  console.log('Extracted token:', accessToken);
-  console.log('Token type:', tokenType);
-  console.log('Expires in:', expiresIn);
+  console.log('Token đã trích xuất:', accessToken);
+  console.log('Loại token:', tokenType);
+  console.log('Hết hạn trong:', expiresIn);
 
   localStorage.setItem('accessToken', accessToken);
   localStorage.setItem('token', accessToken); // Cũng lưu dưới dạng 'token' để tương thích
@@ -89,7 +89,7 @@ const saveAuthData = (data) => {
   const expiresAt = new Date().getTime() + (parseInt(expiresIn) * 1000);
   localStorage.setItem('expiresAt', expiresAt);
   
-  console.log('Token saved to localStorage:', {
+  console.log('Token đã lưu vào localStorage:', {
     accessToken: localStorage.getItem('accessToken'),
     token: localStorage.getItem('token')
   });
@@ -121,34 +121,34 @@ const getCurrentUser = () => {
 const authService = {
   // Đăng nhập ứng viên
   loginCandidate: async (email, password) => {
-    console.log('authService.loginCandidate called');
+    console.log('Đã gọi authService.loginCandidate');
     console.log('Email:', email);
     console.log('Password:', '***'+ password.substring(password.length - 3));
     
     try {
-      console.log('Calling authAPI.loginCandidate...');
-      console.log('Request payload:', { email, password: '***'});
+      console.log('Đang gọi authAPI.loginCandidate...');
+      console.log('Dữ liệu gửi đi:', { email, password: '***'});
       
       const response = await authAPI.loginCandidate({ email, password });
       
-      console.log('Raw response:', response);
-      console.log('Response data:', response.data);
-      console.log('Response code:', response.data?.code);
+      console.log('Phản hồi gốc:', response);
+      console.log('Dữ liệu phản hồi:', response.data);
+      console.log('Mã phản hồi:', response.data?.code);
 
       if (response.data.code === 1000) {
-        console.log('Login API returned code 1000 (SUCCESS)');
+        console.log('API đăng nhập trả về mã 1000 (THÀNH CÔNG)');
         const authData = response.data.result;
-        console.log('Auth data:', authData);
+        console.log('Dữ liệu xác thực:', authData);
         
         saveAuthData(authData);
         
         // Decode token để lấy role thực tế
         const token = authData.accessToken || authData.access_token;
         const tokenData = decodeToken(token);
-        console.log('Token data:', tokenData);
+        console.log('Dữ liệu token:', tokenData);
         
         // Xác định role từ token
-        let userRole = 'APPLICANT'; // Default
+        let userRole = 'APPLICANT'; // Mặc định
         let userType = 'candidate';
         
         if (tokenData?.roles) {
@@ -164,15 +164,15 @@ const authService = {
           }
         }
         
-        console.log('Detected role:', userRole);
+        console.log('Quyền được phát hiện:', userRole);
         localStorage.setItem('userType', userType);
 
         // Lấy hồ sơ người dùng (nếu là candidate)
         if (userRole === 'APPLICANT') {
           try {
-            console.log('Fetching candidate profile...');
+            console.log('Đang tải hồ sơ ứng viên...');
             const profileResponse = await profileAPI.getMyCandidateProfile();
-            console.log('Candidate profile response:', profileResponse.data);
+            console.log('Phản hồi hồ sơ ứng viên:', profileResponse.data);
 
             if (profileResponse.data.code === 1000) {
               const userProfile = profileResponse.data.result;
@@ -185,11 +185,11 @@ const authService = {
                 role: userRole,
                 ...userProfile
               };
-              console.log('Saving candidate user data:', userData);
+            console.log('Đang lưu dữ liệu ứng viên:', userData);
               localStorage.setItem('user', JSON.stringify(userData));
             }
           } catch (profileError) {
-            console.error('Failed to fetch profile:', profileError);
+            console.error('Không thể tải hồ sơ:', profileError);
             // Tiếp tục với dữ liệu người dùng cơ bản
             const basicUserData = {
               id: tokenData?.userId || email,
@@ -198,11 +198,11 @@ const authService = {
               avatar: null,
               role: userRole
             };
-            console.log('Using basic user data:', basicUserData);
+            console.log('Đang sử dụng dữ liệu người dùng cơ bản:', basicUserData);
             localStorage.setItem('user', JSON.stringify(basicUserData));
           }
         } else {
-          // Admin hoặc role khác - lưu basic data
+          // Admin hoặc quyền khác - lưu dữ liệu cơ bản
           const basicUserData = {
             id: tokenData?.userId || email,
             name: email.split('@')[0],
@@ -210,7 +210,7 @@ const authService = {
             avatar: null,
             role: userRole
           };
-          console.log('Saving admin/other user data:', basicUserData);
+          console.log('Đang lưu dữ liệu người dùng admin/khác:', basicUserData);
           localStorage.setItem('user', JSON.stringify(basicUserData));
         }
         
@@ -220,18 +220,18 @@ const authService = {
         };
       }
       
-      console.log('Login API returned non-1000 code:', response.data.code);
+      console.log('API đăng nhập trả về mã khác 1000:', response.data.code);
       return {
         success: false,
         message: translateAuthError(response.data.message || 'Đăng nhập thất bại'),
       };
     } catch (error) {
-      console.error('Login error caught:', error);
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
-      console.error('Error response status:', error.response?.status);
-      console.error('Error response headers:', error.response?.headers);
+      console.error('Đã bắt được lỗi đăng nhập:', error);
+      console.error('Thông báo lỗi:', error.message);
+      console.error('Phản hồi lỗi:', error.response);
+      console.error('Dữ liệu phản hồi lỗi:', error.response?.data);
+      console.error('Trạng thái phản hồi lỗi:', error.response?.status);
+      console.error('Tiêu đề phản hồi lỗi:', error.response?.headers);
       
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error ||
@@ -261,7 +261,7 @@ const authService = {
         message: translateAuthError(response.data.message || 'Đăng ký thất bại'),
       };
     } catch (error) {
-      console.error('Register error:', error.response?.data);
+      console.error('Lỗi đăng ký:', error.response?.data);
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error ||
                           error.message || 
@@ -285,10 +285,10 @@ const authService = {
         // Decode token để lấy role thực tế
         const token = authData.accessToken || authData.access_token;
         const tokenData = decodeToken(token);
-        console.log('Token data:', tokenData);
+        console.log('Dữ liệu token:', tokenData);
         
         // Xác định role từ token
-        let userRole = 'COMPANY'; // Default cho company login
+        let userRole = 'COMPANY'; // Mặc định cho đăng nhập công ty
         let userType = 'company';
         
         if (tokenData?.roles) {
@@ -301,14 +301,14 @@ const authService = {
           }
         }
         
-        console.log('Detected role:', userRole);
+        console.log('Quyền được phát hiện:', userRole);
         localStorage.setItem('userType', userType);
 
         // Lấy hồ sơ công ty (nếu là company)
         if (userRole === 'COMPANY') {
           try {
             const profileResponse = await profileAPI.getMyCompanyProfile();
-            console.log('Company profile response:', profileResponse.data);
+            console.log('Phản hồi hồ sơ công ty:', profileResponse.data);
 
             if (profileResponse.data.code === 1000) {
               const companyProfile = profileResponse.data.result;
@@ -320,11 +320,11 @@ const authService = {
                 role: userRole,
                 ...companyProfile
               };
-              console.log('Saving company user data:', userData);
+            console.log('Đang lưu dữ liệu công ty:', userData);
               localStorage.setItem('user', JSON.stringify(userData));
             }
           } catch (profileError) {
-            console.error('Failed to fetch company profile:', profileError);
+            console.error('Không thể tải hồ sơ công ty:', profileError);
             const basicUserData = {
               id: tokenData?.userId || email,
               name: email.split('@')[0],
@@ -335,7 +335,7 @@ const authService = {
             localStorage.setItem('user', JSON.stringify(basicUserData));
           }
         } else {
-          // Admin - lưu basic data
+          // Admin - lưu dữ liệu cơ bản
           const basicUserData = {
             id: tokenData?.userId || email,
             name: email.split('@')[0],
@@ -343,7 +343,7 @@ const authService = {
             avatar: null,
             role: userRole
           };
-          console.log('Saving admin user data:', basicUserData);
+          console.log('Đang lưu dữ liệu admin:', basicUserData);
           localStorage.setItem('user', JSON.stringify(basicUserData));
         }
         
@@ -391,9 +391,9 @@ const authService = {
 
   // Đăng nhập admin (wrapper - admin có thể login qua candidate hoặc company endpoint)
   loginAdmin: async (email, password) => {
-    console.log('authService.loginAdmin called');
-    // Admin login qua candidate endpoint
-    // Backend sẽ tự động gán role ADMIN nếu user có role đó trong Keycloak
+    console.log('Đã gọi authService.loginAdmin');
+    // Đăng nhập admin qua endpoint của ứng viên
+    // Backend sẽ tự động gán quyền ADMIN nếu người dùng có quyền đó trong Keycloak
     return authService.loginCandidate(email, password);
   },
 

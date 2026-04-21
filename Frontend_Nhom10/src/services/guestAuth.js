@@ -1,8 +1,9 @@
 /**
  * GUEST LOGIN SERVICE
  * 
- * Tự động login với guest account khi chưa có token
- * để có thể xem jobs public mà không cần đăng ký
+ * DỊCH VỤ ĐĂNG NHẬP KHÁCH
+ * Tự động đăng nhập với tài khoản khách khi chưa có token
+ * để có thể xem các công việc công khai mà không cần đăng ký
  */
 
 import { authAPI, profileAPI } from './api';
@@ -12,7 +13,7 @@ const GUEST_CREDENTIALS = {
   password: 'Guest123!@#'
 };
 
-// Save auth data to localStorage
+// Lưu dữ liệu xác thực vào localStorage
 const saveAuthData = (data) => {
   const accessToken = data.accessToken || data.access_token;
   const tokenType = data.tokenType || data.token_type || 'Bearer';
@@ -28,8 +29,8 @@ const saveAuthData = (data) => {
 };
 
 /**
- * Auto login với guest account
- * @returns {Promise<boolean>} true nếu login thành công
+ * Tự động đăng nhập với tài khoản khách
+ * @returns {Promise<boolean>} true nếu đăng nhập thành công
  */
 export const autoLoginAsGuest = async () => {
   try {
@@ -39,7 +40,7 @@ export const autoLoginAsGuest = async () => {
       const authData = response.data.result;
       saveAuthData(authData);
       
-      // Fetch profile
+      // Tải hồ sơ
       try {
         const profileResponse = await profileAPI.getMyCandidateProfile();
         if (profileResponse?.data?.code === 1000) {
@@ -55,7 +56,7 @@ export const autoLoginAsGuest = async () => {
           localStorage.setItem('user', JSON.stringify(userData));
         }
       } catch (err) {
-        // Silent fail for profile fetch
+        // Bỏ qua nếu có lỗi khi tải hồ sơ
       }
       
       return true;
@@ -63,13 +64,13 @@ export const autoLoginAsGuest = async () => {
     
     return false;
   } catch (error) {
-    console.error('Guest login error:', error);
+    console.error('Lỗi đăng nhập khách:', error);
     return false;
   }
 };
 
 /**
- * Kiểm tra và auto-login nếu cần
+ * Kiểm tra và tự động đăng nhập nếu cần
  */
 export const ensureAuthenticated = async () => {
   const token = localStorage.getItem('accessToken');
@@ -78,7 +79,7 @@ export const ensureAuthenticated = async () => {
     return await autoLoginAsGuest();
   }
   
-  // Check if token expired
+  // Kiểm tra xem token đã hết hạn chưa
   const expiresAt = localStorage.getItem('expiresAt');
   if (expiresAt && new Date().getTime() > parseInt(expiresAt)) {
     return await autoLoginAsGuest();
