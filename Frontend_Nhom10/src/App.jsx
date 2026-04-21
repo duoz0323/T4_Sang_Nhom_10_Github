@@ -22,6 +22,7 @@ import CandidateProfilePage from "./features/candidates/pages/CandidateProfilePa
 import CompanyManageCandidatesPage from './features/company/pages/CompanyManageCandidatesPage';
 import AdminDashboardPage from "./features/admin/pages/AdminDashboardPage.jsx";
 import AdminUserPage from "./features/admin/pages/AdminUserPage.jsx";
+import AdminCompanyPage from "./features/admin/pages/AdminCompanyPage.jsx";
 import AdminPendingPostPage from "./features/admin/pages/AdminPendingPostPage.jsx";
 import AdminCategoriesPage from "./features/admin/pages/AdminCategoriesPage.jsx";
 import AdminStatisticsPage from "./features/admin/pages/AdminStatisticsPage.jsx";
@@ -169,6 +170,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="ADMIN">
                 <AdminUserPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/companies"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminCompanyPage />
               </ProtectedRoute>
             }
           />
