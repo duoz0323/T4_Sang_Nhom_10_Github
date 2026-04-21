@@ -7,53 +7,53 @@ import Header from '../../../components/layout/Header';
 import Footer from '../../../components/layout/Footer';
 import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
-const MOCK_JOBS = [
-  {
-    jobPostingId: 1,
-    title: 'Senior Frontend Developer',
-    description: 'Công ty ABC - Hồ Chí Minh',
-    salaryRequire: 30000000,
-    status: 'ACTIVE',
-    locations: [{ city: 'Hồ Chí Minh' }],
-    industries: [{
-      skills: [
-        { skillName: 'React' },
-        { skillName: 'TypeScript' },
-        { skillName: 'Node.js' }
-      ]
-    }]
-  },
-  {
-    jobPostingId: 2,
-    title: 'Backend Java Developer',
-    description: 'Công ty XYZ - Hà Nội',
-    salaryRequire: 25000000,
-    status: 'ACTIVE',
-    locations: [{ city: 'Hà Nội' }],
-    industries: [{
-      skills: [
-        { skillName: 'Java' },
-        { skillName: 'Spring Boot' },
-        { skillName: 'MySQL' }
-      ]
-    }]
-  },
-  {
-    jobPostingId: 3,
-    title: 'Marketing Manager',
-    description: 'Công ty DEF - Đà Nẵng',
-    salaryRequire: 20000000,
-    status: 'ACTIVE',
-    locations: [{ city: 'Đà Nẵng' }],
-    industries: [{
-      skills: [
-        { skillName: 'Marketing' },
-        { skillName: 'SEO' },
-        { skillName: 'Content' }
-      ]
-    }]
-  }
-];
+// const MOCK_JOBS = [
+//   {
+//     jobPostingId: 1,
+//     title: 'Senior Frontend Developer',
+//     description: 'Công ty ABC - Hồ Chí Minh',
+//     salaryRequire: 30000000,
+//     status: 'ACTIVE',
+//     locations: [{ city: 'Hồ Chí Minh' }],
+//     industries: [{
+//       skills: [
+//         { skillName: 'React' },
+//         { skillName: 'TypeScript' },
+//         { skillName: 'Node.js' }
+//       ]
+//     }]
+//   },
+//   {
+//     jobPostingId: 2,
+//     title: 'Backend Java Developer',
+//     description: 'Công ty XYZ - Hà Nội',
+//     salaryRequire: 25000000,
+//     status: 'ACTIVE',
+//     locations: [{ city: 'Hà Nội' }],
+//     industries: [{
+//       skills: [
+//         { skillName: 'Java' },
+//         { skillName: 'Spring Boot' },
+//         { skillName: 'MySQL' }
+//       ]
+//     }]
+//   },
+//   {
+//     jobPostingId: 3,
+//     title: 'Marketing Manager',
+//     description: 'Công ty DEF - Đà Nẵng',
+//     salaryRequire: 20000000,
+//     status: 'ACTIVE',
+//     locations: [{ city: 'Đà Nẵng' }],
+//     industries: [{
+//       skills: [
+//         { skillName: 'Marketing' },
+//         { skillName: 'SEO' },
+//         { skillName: 'Content' }
+//       ]
+//     }]
+//   }
+// ];
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
@@ -174,7 +174,7 @@ const HomePage = () => {
 
           const topJobs = sortedJobs.slice(0, 3);
           setJobs(topJobs);
-          sessionStorage.setItem('homepage_top_jobs', JSON.stringify(topJobs));
+          sessionStorage.setItem('homepage_top_jobs', JSON. stringify(topJobs));
           setError(null);
         } else {
           setError('Không thể tải dữ liệu công việc');

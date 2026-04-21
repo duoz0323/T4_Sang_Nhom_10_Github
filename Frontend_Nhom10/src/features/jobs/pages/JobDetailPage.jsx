@@ -10,7 +10,8 @@ import LoadingSpinner from '../../../components/common/LoadingSpinner';
 const JobDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const userRole = user?.role;
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -34,7 +35,7 @@ const JobDetailPage = () => {
 
   const fetchJobDetail = async () => {
     try {
-      // ✅ KHÔNG CẦN ensureAuthenticated() - /posts/{id} là PUBLIC endpoint
+      // KHÔNG CẦN ensureAuthenticated() - /posts/{id} là endpoint CÔNG KHAI
       const response = await jobAPI.getJobById(id);
 
 
@@ -64,7 +65,7 @@ const JobDetailPage = () => {
           location: jobData.locations?.map(l => l.name || l.city || l.province).filter(Boolean).join(', ') || 'Chưa xác định',
           industry: jobData.industry?.name || jobData.industry?.nameIndustry || 'Chưa xác định',
           deadline: jobData.deadline || 'N/A',
-          level: 'Cấp quản lý', // Default as not in BE
+          level: 'Cấp quản lý', // Mặc định do không có trong BE
           description: jobData.description || 'Phụ trách tuyển dụng nhân sự',
           requirements: jobData.skills?.map(skill => ({
             icon: 'verified',
@@ -94,7 +95,7 @@ const JobDetailPage = () => {
       const response = await jobAPI.getMyApplications();
       //
       if (response?.data?.result && Array.isArray(response.data.result)) {
-        // Look for application to THIS specific jobPostingId 
+        // Tìm kiếm đơn ứng tuyển cho ID công việc cụ thể NÀY 
         const existingApp = response.data.result.find(
            app => app.jobPosting?.id === id || app.jobPostingId === id
         );
@@ -126,7 +127,7 @@ const JobDetailPage = () => {
       return;
     }
 
-    // ✅ Backend trả về role là "APPLICANT" không phải "CANDIDATE"
+    // Backend trả về quyền là "APPLICANT" không phải "CANDIDATE"
     if (userRole !== 'APPLICANT' && userRole !== 'CANDIDATE') {
       toast.error('Chỉ ứng viên mới có thể lưu công việc');
       return;
@@ -150,7 +151,7 @@ const JobDetailPage = () => {
         console.error('Lỗi khi thao tác Lưu/Bỏ lưu công việc:', err);
       // Nếu tính năng chưa được thực hiện trong backend, chỉ hiển thị thông báo
       if (err.response?.status === 404 || err.message?.includes('not implemented')) {
-        console.warn('Save jobs feature not yet implemented in backend');
+        console.warn('Tính năng lưu công việc chưa được thực hiện ở backend');
         // Theo tùy chọn vẫn chuyển đổi trạng thái UI cục bộ
         setIsSaved(!isSaved);
       } else {
@@ -187,14 +188,14 @@ const JobDetailPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔐 Validation Layer
+    // Lớp kiểm tra dữ liệu
     if (!isAuthenticated) {
       toast.error('Vui lòng đăng nhập để ứng tuyển');
       navigate('/login');
       return;
     }
 
-    // ✅ Backend trả về role là "APPLICANT" không phải "CANDIDATE"
+    // Backend trả về quyền là "APPLICANT" không phải "CANDIDATE"
     if (userRole !== 'APPLICANT' && userRole !== 'CANDIDATE') {
       toast.error('Chỉ ứng viên mới có thể ứng tuyển');
       return;
@@ -217,11 +218,11 @@ const JobDetailPage = () => {
     try {
 
 
-      // ✅ Correct API call format - PHONE là REQUIRED
+      // Định dạng gọi API chuẩn - SỐ ĐIỆN THOẠI là BẮT BUỘC
       const applicationData = {
         name: formData.fullName.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim() // ✅ Phone bắt buộc
+        phone: formData.phone.trim() // Số điện thoại bắt buộc
       };
 
       const response = await jobAPI.applyJob(id, applicationData, formData.cv);
@@ -251,7 +252,7 @@ const JobDetailPage = () => {
         if (fileInput) fileInput.value = '';
       } else {
         const errorMsg = response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-        console.error('Application error:', errorMsg);
+        console.error('Lỗi ứng tuyển:', errorMsg);
         toast.error(errorMsg);
       }
     } catch (err) {
@@ -578,17 +579,3 @@ const MOCK_JOB = {
 };
 
 export default JobDetailPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

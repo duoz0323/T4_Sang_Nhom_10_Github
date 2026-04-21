@@ -13,7 +13,7 @@ const jobService = {
       const response = await jobAPI.getAllActiveJobs();
       return response.data?.result || [];
     } catch (error) {
-      console.error('Error fetching public jobs:', error);
+      console.error('Lỗi khi tải công việc công khai:', error);
       throw error;
     }
   },
@@ -28,7 +28,7 @@ const jobService = {
       const response = await jobAPI.getJobById(jobId);
       return response.data?.result || null;
     } catch (error) {
-      console.error('Error fetching job detail:', error);
+      console.error('Lỗi khi tải chi tiết công việc:', error);
       throw error;
     }
   },
@@ -42,7 +42,7 @@ const jobService = {
       const response = await jobAPI.getMyJobs();
       return response.data?.result || [];
     } catch (error) {
-      console.error('Error fetching my jobs:', error);
+      console.error('Lỗi khi tải công việc của tôi:', error);
       throw error;
     }
   },
@@ -57,7 +57,7 @@ const jobService = {
       const response = await jobAPI.createJob(jobData);
       return response.data?.result || null;
     } catch (error) {
-      console.error('Error creating job:', error);
+      console.error('Lỗi khi tạo công việc:', error);
       throw error;
     }
   },
@@ -73,7 +73,7 @@ const jobService = {
       const response = await jobAPI.updateJob(jobId, jobData);
       return response.data?.result || null;
     } catch (error) {
-      console.error('Error updating job:', error);
+      console.error('Lỗi khi cập nhật công việc:', error);
       throw error;
     }
   },
@@ -88,7 +88,7 @@ const jobService = {
       const response = await jobAPI.closeJob(jobId);
       return response.data?.result || null;
     } catch (error) {
-      console.error('Error closing job:', error);
+      console.error('Lỗi khi đóng công việc:', error);
       throw error;
     }
   },
@@ -103,7 +103,7 @@ const jobService = {
       const response = await jobAPI.reopenJob(jobId);
       return response.data?.result || null;
     } catch (error) {
-      console.error('Error reopening job:', error);
+      console.error('Lỗi khi mở lại công việc:', error);
       throw error;
     }
   },
@@ -117,7 +117,7 @@ const jobService = {
       const response = await jobAPI.getPendingJobs();
       return response.data?.result || [];
     } catch (error) {
-      console.error('Error fetching pending jobs:', error);
+      console.error('Lỗi khi tải các công việc đang chờ xử lý:', error);
       throw error;
     }
   },
@@ -133,7 +133,7 @@ const jobService = {
       const response = await jobAPI.updateJobStatus(jobId, status);
       return response.data?.result || null;
     } catch (error) {
-      console.error('Error updating job status:', error);
+      console.error('Lỗi khi cập nhật trạng thái công việc:', error);
       throw error;
     }
   },
@@ -146,7 +146,7 @@ const jobService = {
   formatSalary: (salary) => {
     if (!salary) return 'Thỏa thuận';
     
-    // Convert to millions (triệu)
+    // Chuyển đổi sang triệu
     const millions = salary / 1000000;
     
     if (millions >= 1) {
@@ -175,7 +175,7 @@ const jobService = {
       );
     }
 
-    // Filter by location
+    // Lọc theo địa điểm
     if (filters.location) {
       filteredJobs = filteredJobs.filter((job) =>
         job.locations?.some(
@@ -194,7 +194,7 @@ const jobService = {
       );
     }
 
-    // Filter by salary range
+    // Lọc theo khoảng lương
     if (filters.salaryRange) {
       const [min, max] = filters.salaryRange;
       filteredJobs = filteredJobs.filter(
